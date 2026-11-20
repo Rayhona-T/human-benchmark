@@ -20,7 +20,11 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 2 — Task 2: Stroop Scientific Protocol | Approved |
 | Cycle 2 — Task 3: Flanker Scientific Protocol | Complete — awaiting review |
 | Cycle 2 — Task 4: Scientific Harmonization & Approval | Complete — awaiting human review |
-| Cycle 3 — Frontend Foundation | Planned — not started |
+| Cycle 3 — Frontend Foundation | In progress — Tasks 1–3 approved; Task 4 complete awaiting human review |
+| Cycle 3 — Task 1: Frontend Architecture & Foundation | Approved |
+| Cycle 3 — Task 2: Design System & UI Components | Approved |
+| Cycle 3 — Task 3: Core Navigation & Application Shell | Approved |
+| Cycle 3 — Task 4: Frontend Foundation Review & Approval | Complete — awaiting human review |
 | Cycle 4 — Experiment Engine | Planned — not started |
 | Cycle 5 — Stroop Implementation | Planned — not started |
 | Cycle 6 — Flanker Implementation | Planned — not started |
@@ -28,7 +32,7 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 8 — Backend & Persistence | Planned — not started |
 | Cycle 9 — Personal Observatory | Planned — not started |
 | Cycle 10 — Testing, Pilot & Deployment | Planned — not started |
-| Application implementation | Not started |
+| Application product implementation | Not started |
 
 ## Phase 0 — Product/Foundation
 
