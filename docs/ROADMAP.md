@@ -15,7 +15,11 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 1 — Task 3: Scientific Blueprint | Approved |
 | Cycle 1 — Task 4: Protocol/data decisions | Approved |
 | Cycle 1 — Foundation | Complete |
-| Cycle 2 — Scientific Protocol & Literature | Next milestone — not started |
+| Cycle 2 — Scientific Protocol & Literature | In progress — Tasks 1–2 approved; Task 3 awaiting review; Task 4 complete awaiting human review |
+| Cycle 2 — Task 1: Literature & Evidence Review | Approved |
+| Cycle 2 — Task 2: Stroop Scientific Protocol | Approved |
+| Cycle 2 — Task 3: Flanker Scientific Protocol | Complete — awaiting review |
+| Cycle 2 — Task 4: Scientific Harmonization & Approval | Complete — awaiting human review |
 | Cycle 3 — Frontend Foundation | Planned — not started |
 | Cycle 4 — Experiment Engine | Planned — not started |
 | Cycle 5 — Stroop Implementation | Planned — not started |

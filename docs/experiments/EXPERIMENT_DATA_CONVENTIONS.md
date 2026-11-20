@@ -1,6 +1,6 @@
 # Experiment and Data Conventions
 
-**Status:** Cycle 1 conceptual decisions for the initial Stroop and Flanker experiments. These conventions guide protocol review and later data-dictionary work; they are not a database schema, API, or implementation specification.
+**Status:** Harmonized for Cycle 2 Task 4. These conventions guide protocol review and later data-dictionary work; they are not a database schema, API, or implementation specification.
 
 ## 1. Shared Trial Outcomes
 
@@ -30,11 +30,14 @@ The preliminary primary RT is the median of valid correct main-trial reaction ti
 
 ## 3. Shared Timing Convention
 
-- Record stimulus onset and the first valid mapped keydown with the same monotonic clock.
-- RT is the elapsed time from recorded stimulus onset to the first valid mapped keydown timestamp.
+- Record stimulus onset and the first valid mapped keydown with the same monotonic clock (`performance.now()` origin, or an explicitly equivalent monotonic timestamp source).
+- Use a recorded browser/animation-frame stimulus-onset timestamp, not a claim of physical photon onset.
+- RT is the elapsed time from recorded stimulus onset to the first valid mapped keydown handler timestamp.
+- End a trial at the next stimulus-offset animation frame after a valid response or at the first frame at or after the deadline for a timeout.
 - Ignore keypresses before stimulus onset, keyboard auto-repeat, and key events after the first valid response or outside the active stimulus.
 - If focus or visibility is lost during an active stimulus, mark that trial technically invalid, not a timeout; record the reason and do not silently replay it.
-- Browser timing is device- and environment-dependent. Do not claim laboratory-grade timing; deeper timing validation belongs in Cycle 2.
+- Do not begin an active stimulus while the page is hidden or unfocused; wait until both states are restored.
+- Browser timing is device- and environment-dependent. Do not claim laboratory-grade timing or cross-device equivalence without configuration-specific validation.
 
 Each protocol may specify additional timing details, but should not redefine these shared basics without an explicit decision.
 
@@ -43,27 +46,44 @@ Each protocol may specify additional timing details, but should not redefine the
 - Practice trials are identified separately, may provide correctness feedback, and are excluded from main-trial metrics.
 - Main-trial feedback behavior is specified per experiment; the current proposals provide no correctness feedback during main trials.
 - A **complete** session means the planned trial sequence reached its end; it may still contain explicitly invalid trials.
-- An **incomplete** session did not reach the planned end. An **interrupted** session stopped because of a technical interruption. Neither should be presented as a completed session.
+- An **incomplete** session did not reach the planned end through participant departure or another non-technical stop.
+- An **interrupted** session stopped because of page closure/reload or an unrecoverable runtime termination.
+- A **technical_error** session stops during pre-trial setup or schedule generation and has no usable main-session completion state.
+- Neither complete nor incomplete/interrupted/technical-error sessions should be silently presented as normal complete-session results.
 - Session completion and trial validity are separate: an invalid trial does not by itself make every other trial invalid.
-- Do not calculate or display a complete-session contrast from an incomplete/interrupted session without clearly labeling it and defining the rule in the protocol.
+- Do not calculate or display complete-session contrasts from incomplete, interrupted, or technical-error sessions.
 
-Exact session-level invalidity thresholds and incomplete-session presentation rules remain for Cycle 2.
+An individual focus/visibility interruption invalidates one presented active trial but does not by itself interrupt the whole session. Unpresented scheduled trials are neither timeout nor invalid outcomes; they contribute to incomplete-session status.
 
 ## 5. Minimum Conceptual Trial Record
 
 Every trial must be interpretable in its session and experiment-version context. Preserve at least:
 
 - Trial index and practice/main designation.
-- Experiment and protocol/configuration version; condition.
+- Experiment, protocol/configuration version, and configuration identifier.
 - Stimulus identity and task-relevant attributes (for example, word and ink color or arrow pattern and target direction).
 - Correct response mapping and participant response, or no response.
 - Outcome category and timeout/invalid reason where applicable.
 - RT where defined, plus recorded stimulus-onset and response timestamps.
-- Associated session randomization seed, randomization/schedule version, and realized trial order.
+- Associated session randomization seed, PRNG/shuffle identifier, randomization configuration version, schedule-generation status, and realized practice/main trial order.
 
-These are information requirements only. The data dictionary must later define field names, types, units, export representation, and treatment of missing values.
+The conceptual session record must also retain:
 
-## 6. Privacy and Transparency
+- Session identifier, experiment and protocol/version identifiers, practice and main trial counts, and session status.
+- Break offered/taken and elapsed duration, and focus/visibility interruption status.
+- Seed and realized schedule context, but no unnecessary participant identity or device fingerprint.
+
+These are information requirements only. The data dictionary must later define field names, types, units, export representation, and treatment of missing values. No database or API design is implied.
+
+## 6. Configuration and Reproducibility
+
+- Record the protocol/configuration version and the implemented experiment configuration for every session.
+- Record a 32-bit unsigned session seed and the PRNG/schedule identifier for valid schedule generation.
+- Record the realized practice and main schedules, schedule-generation status, and any selected stimulus-allocation detail required to reproduce the session.
+- A seed or protocol version without the realized order is not sufficient to reconstruct a session.
+- Randomization configuration names and algorithms may differ between experiments only when the protocol intentionally defines a different balanced schedule.
+
+## 7. Privacy and Transparency
 
 - Collect only data necessary to present, interpret, reproduce, or export the session.
 - Avoid names, contact details, and device fingerprinting for guest participation unless a separate, justified decision is made.
@@ -71,11 +91,8 @@ These are information requirements only. The data dictionary must later define f
 - Keep trial outcomes, session status, experiment version, and randomization context explicit rather than inferring them from a final score.
 - Do not create a combined score, rank participants, or infer diagnosis or general ability from these records.
 
-## 7. Cycle 2 Questions
+## 8. Remaining Implementation Inputs
 
-- Finalize a data dictionary and export representation without prematurely defining persistence or database structure.
-- Review the outcome and denominator conventions for each experiment against its protocol and analysis rationale.
-- Define missing, invalid, interrupted, and session-level data-quality rules.
-- Specify how seeds, randomization method versions, configurations, and realized order support reproducibility.
-- Determine which timing, browser, or device metadata are justified, privacy-preserving, and useful.
-- Define which trial and session information participants can inspect, export, and clear.
+- Finalize the data dictionary and export representation without prematurely defining persistence or database structure.
+- Determine whether browser and device metadata are justified for the supported testing scope; collect only privacy-preserving metadata needed to interpret timing or reproducibility.
+- Define the exact export field names, missing-value representation, and active-session clear behavior.
