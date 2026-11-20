@@ -101,3 +101,30 @@ This is a practical audit, not a claim of complete WCAG 2.2 AA compliance or
 cross-browser certification. The dependency audit currently reports no known
 production or development vulnerabilities. Experiment implementation,
 backend, database, analytics, and persistence remain out of scope.
+
+## Experiment engine contracts
+
+The React-independent contracts for Cycle 4 are under `src/engine/`. They
+provide experiment identity/configuration, session and trial state types,
+response and timing metadata, trial/session records, experiment adapter
+interfaces, a monotonic-clock abstraction, and a pure session-transition model.
+The lifecycle controller is implemented for session and trial progression,
+breaks, pauses, aborts, and completion. Stimulus rendering, scheduling
+algorithms, response capture, actual timing, analysis, and persistence remain
+for later tasks.
+
+## Engine integration audit
+
+The complete engine is covered by deterministic unit and integration tests.
+The integration suite exercises practice-to-main completion, incorrect
+responses, timeout and late input, pause/resume, active interruption, break
+pause/resume, abort, technical failure, and race-safe settlement. No UI,
+experiment adapter, backend, or persistence implementation is included.
+
+## Timing, input, and validity
+
+The engine exposes an injectable monotonic clock, deadline scheduler, keyboard
+event source, interruption event source, response-input controller, and trial
+runtime. Browser timing uses `performance.now()` and is expressly documented as
+browser-recorded rather than physical stimulus onset. Test implementations use
+fake clocks and schedulers.

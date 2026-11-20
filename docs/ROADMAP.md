@@ -15,17 +15,21 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 1 — Task 3: Scientific Blueprint | Approved |
 | Cycle 1 — Task 4: Protocol/data decisions | Approved |
 | Cycle 1 — Foundation | Complete |
-| Cycle 2 — Scientific Protocol & Literature | In progress — Tasks 1–2 approved; Task 3 awaiting review; Task 4 complete awaiting human review |
+| Cycle 2 — Scientific Protocol & Literature | Complete |
 | Cycle 2 — Task 1: Literature & Evidence Review | Approved |
 | Cycle 2 — Task 2: Stroop Scientific Protocol | Approved |
-| Cycle 2 — Task 3: Flanker Scientific Protocol | Complete — awaiting review |
-| Cycle 2 — Task 4: Scientific Harmonization & Approval | Complete — awaiting human review |
-| Cycle 3 — Frontend Foundation | In progress — Tasks 1–3 approved; Task 4 complete awaiting human review |
+| Cycle 2 — Task 3: Flanker Scientific Protocol | Approved |
+| Cycle 2 — Task 4: Scientific Harmonization & Approval | Approved |
+| Cycle 3 — Frontend Foundation | Complete |
 | Cycle 3 — Task 1: Frontend Architecture & Foundation | Approved |
 | Cycle 3 — Task 2: Design System & UI Components | Approved |
 | Cycle 3 — Task 3: Core Navigation & Application Shell | Approved |
-| Cycle 3 — Task 4: Frontend Foundation Review & Approval | Complete — awaiting human review |
-| Cycle 4 — Experiment Engine | Planned — not started |
+| Cycle 3 — Task 4: Frontend Foundation Review & Approval | Approved |
+| Cycle 4 — Experiment Engine | In progress — Tasks 1–4 complete awaiting human review; Cycle 4 not approved; Cycle 5 not started |
+| Cycle 4 — Task 1: Engine Architecture & Core Contracts | Complete — awaiting human review |
+| Cycle 4 — Task 2: Session & Trial Lifecycle | Complete — awaiting human review |
+| Cycle 4 — Task 3: Timing, Input & Validity | Complete — awaiting human review |
+| Cycle 4 — Task 4: Integration, Testing & Engine Approval | Complete — awaiting human review |
 | Cycle 5 — Stroop Implementation | Planned — not started |
 | Cycle 6 — Flanker Implementation | Planned — not started |
 | Cycle 7 — Analysis & Results | Planned — not started |
