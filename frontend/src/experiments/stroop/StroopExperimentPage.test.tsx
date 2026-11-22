@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -38,6 +39,35 @@ describe("StroopExperimentPage", () => {
     });
     expect(heading).toBeInTheDocument();
     expect(heading).toHaveFocus();
+  });
+
+  it("briefs participants as protocol §3 requires before they start", () => {
+    renderPage();
+    const intro = screen
+      .getByRole("heading", { name: "Respond to the ink color" })
+      .closest("article") as HTMLElement;
+    const text = intro.textContent ?? "";
+    for (const required of [
+      /respond to the ink color, not to read the word/i,
+      /not a diagnosis, IQ test, or validated assessment/i,
+      /12 practice trials with feedback/i,
+      /60 trials and no correctness feedback/i,
+      /after 2 seconds/i,
+      /break after trial 30/i,
+      /describe this task session only/i,
+      /Browser timing, keyboard, and color perception can affect responses/i,
+      /Nothing is saved or sent anywhere/i,
+      /You can stop at any time/i,
+      /Leaving early is not a failure/i,
+      /unfamiliar with the English color words/i,
+      /cannot easily tell the four ink colors apart/i,
+      /does not type the letters D, F, J, and K/i,
+    ]) {
+      expect(text).toMatch(required);
+    }
+    expect(
+      within(intro).getByLabelText("Stroop response keys"),
+    ).toBeInTheDocument();
   });
 
   it("requires all four logical keys and echoes each recognized key and color", async () => {
@@ -78,6 +108,30 @@ describe("StroopExperimentPage", () => {
     expect(
       screen.getByRole("heading", { name: "Session ended" }),
     ).toHaveFocus();
+  });
+
+  it("resets page scroll on each screen change so the session bar is never under the sticky header", () => {
+    vi.spyOn(document, "hasFocus").mockReturnValue(true);
+    const scroller = document.scrollingElement ?? document.documentElement;
+    Object.defineProperty(scroller, "scrollTop", {
+      value: 0,
+      writable: true,
+      configurable: true,
+    });
+    renderPage();
+    scroller.scrollTop = 420; // participant scrolled down to the button
+    fireEvent.click(screen.getByRole("button", { name: "Start Stroop" }));
+    expect(scroller.scrollTop).toBe(0);
+    for (const key of ["d", "f", "j", "k"]) fireEvent.keyDown(window, { key });
+    scroller.scrollTop = 380;
+    fireEvent.click(
+      screen.getByRole("button", { name: "Begin 12 practice trials" }),
+    );
+    expect(scroller.scrollTop).toBe(0);
+    expect(
+      screen.getByRole("group", { name: "Experiment controls" }),
+    ).toBeInTheDocument();
+    delete (scroller as unknown as Record<string, unknown>).scrollTop;
   });
 
   it("pauses trials behind the exit dialog and resumes on Continue", () => {

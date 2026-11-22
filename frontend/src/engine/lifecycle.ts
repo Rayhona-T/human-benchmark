@@ -36,7 +36,17 @@ export type LifecycleAction<TResponse = string> =
   | { type: "ABORT" }
   | { type: "INTERRUPT" }
   | { type: "COMPLETE" }
-  | { type: "SCHEDULE_ERROR" };
+  | { type: "SCHEDULE_ERROR" }
+  | {
+      /**
+       * Fills post-settle timestamps on the most recent trial record. Each
+       * field can be set once; existing values are never overwritten.
+       */
+      type: "RECORD_TRIAL_TIMING";
+      trialId: string;
+      stimulusOffsetMs?: number;
+      itiEndMs?: number;
+    };
 
 export type LifecycleErrorReason =
   | "invalid_transition"
@@ -45,7 +55,8 @@ export type LifecycleErrorReason =
   | "invalid_schedule"
   | "premature_completion"
   | "break_not_configured"
-  | "break_not_at_boundary";
+  | "break_not_at_boundary"
+  | "invalid_timing_record";
 
 export type LifecycleResult =
   | { ok: true }
@@ -191,6 +202,8 @@ export class ExperimentLifecycle<
         return this.interrupt();
       case "COMPLETE":
         return this.completeSession();
+      case "RECORD_TRIAL_TIMING":
+        return this.recordTrialTiming(action);
       case "SCHEDULE_ERROR":
         return this.requireState("idle", () => {
           this.state = "technical_error";
@@ -208,7 +221,7 @@ export class ExperimentLifecycle<
       practiceIndex: this.practiceIndex,
       mainIndex: this.mainIndex,
       activeTrial: this.activeTrial ? { ...this.activeTrial } : null,
-      records: this.records.map((record) => ({ ...record })),
+      records: this.copyRecords(),
       breakTaken: this.breakTaken,
       breakDurationMs: this.breakDurationMs,
       status: this.status,
@@ -237,8 +250,61 @@ export class ExperimentLifecycle<
       breakTaken: this.breakTaken,
       breakDurationMs: this.breakDurationMs,
       randomization: this.randomization,
-      trialRecords: this.records.map((record) => ({ ...record })),
+      trialRecords: this.copyRecords(),
     };
+  }
+
+  private copyRecords(): TrialRecord<TStimulus, TCondition, TResponse>[] {
+    return this.records.map((record) => ({
+      ...record,
+      timing: { ...record.timing },
+    }));
+  }
+
+  private recordTrialTiming(
+    action: Extract<
+      LifecycleAction<TResponse>,
+      { type: "RECORD_TRIAL_TIMING" }
+    >,
+  ): LifecycleResult {
+    if (
+      this.state !== "practice" &&
+      this.state !== "main" &&
+      this.state !== "ready"
+    ) {
+      return this.error("invalid_transition");
+    }
+    const latest = this.records[this.records.length - 1];
+    if (!latest || latest.trialId !== action.trialId) {
+      return this.error("invalid_timing_record");
+    }
+    const timing = { ...latest.timing };
+    const valid = (value: number) => Number.isFinite(value) && value >= 0;
+
+    if (action.stimulusOffsetMs !== undefined) {
+      if (
+        timing.stimulusOffsetMs !== null ||
+        !valid(action.stimulusOffsetMs) ||
+        (timing.stimulusOnsetMs !== null &&
+          action.stimulusOffsetMs < timing.stimulusOnsetMs)
+      ) {
+        return this.error("invalid_timing_record");
+      }
+      timing.stimulusOffsetMs = action.stimulusOffsetMs;
+    }
+    if (action.itiEndMs !== undefined) {
+      if (
+        timing.itiEndMs !== null ||
+        timing.stimulusOffsetMs === null ||
+        !valid(action.itiEndMs) ||
+        action.itiEndMs < timing.stimulusOffsetMs
+      ) {
+        return this.error("invalid_timing_record");
+      }
+      timing.itiEndMs = action.itiEndMs;
+    }
+    this.records = [...this.records.slice(0, -1), { ...latest, timing }];
+    return { ok: true };
   }
 
   private requireState(
@@ -313,6 +379,7 @@ export class ExperimentLifecycle<
       responseTimestampMs: action.response?.timestampMs ?? null,
       deadlineMs: null,
       trialEndMs: null,
+      stimulusOffsetMs: null,
       itiEndMs: null,
       reactionTimeMs: null,
       trialDurationMs: null,

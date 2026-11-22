@@ -15,7 +15,6 @@ export function StroopStimulus({ stimulus }: StroopStimulusProps) {
         fontWeight: stimulus.fontWeight,
         fontFamily: stimulus.fontFamily,
       }}
-      aria-label={stimulus.word}
     >
       {stimulus.word}
     </div>

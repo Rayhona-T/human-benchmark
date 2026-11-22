@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
@@ -6,6 +6,8 @@ import { Card } from "../../components/ui/Card";
 import { usePageTitle } from "../../app/usePageTitle";
 import { STROOP_CONFIGURATION, STROOP_RESPONSE_MAPPING } from "./stroop";
 import { StroopKeyLegend } from "./StroopKeyLegend";
+import { StroopResults } from "./StroopResults";
+import { computeStroopResults } from "./stroopAnalysis";
 import { StroopStimulus } from "./StroopStimulus";
 import { useStroopSession, type StroopScreen } from "./useStroopSession";
 import "./StroopExperiment.css";
@@ -39,11 +41,35 @@ export function StroopExperimentPage({
   const pausedForExitRef = useRef(false);
   const exitOpenerRef = useRef<HTMLElement | null>(null);
   const keyCheckComplete = checkedKeys.size === STROOP_RESPONSE_MAPPING.length;
-  const { screen } = session;
+  const { screen, getSnapshot } = session;
+
+  // Results derive only from the engine's recorded trials, once the session
+  // has ended. No trial is added, inferred, or modified here.
+  const results = useMemo(() => {
+    if (
+      screen !== "completed" &&
+      screen !== "aborted" &&
+      screen !== "technical"
+    ) {
+      return null;
+    }
+    const snapshot = getSnapshot();
+    if (!snapshot) return null;
+    return computeStroopResults({
+      status: snapshot.status,
+      records: snapshot.records,
+      breakTaken: snapshot.breakTaken,
+      breakDurationMs: snapshot.breakDurationMs,
+    });
+  }, [getSnapshot, screen]);
 
   useEffect(() => {
+    // Each screen starts at the top so the session bar (progress, Pause,
+    // Exit) is never left hidden under the sticky site header.
+    const scroller = document.scrollingElement ?? document.documentElement;
+    scroller.scrollTop = 0;
     if (FOCUSED_HEADING_SCREENS.includes(screen)) {
-      headingRef.current?.focus();
+      headingRef.current?.focus({ preventScroll: true });
     }
   }, [screen]);
 
@@ -163,21 +189,47 @@ export function StroopExperimentPage({
             <Badge tone="info">Stroop experiment</Badge>
             <h1>Respond to the ink color</h1>
             <p className="stroop-intro__summary">
-              This educational task explores how a word's meaning may compete
-              with the color used to display it. It is not a diagnosis, IQ test,
-              or validated assessment of general ability.
+              This educational task explores how responses can differ when a
+              word's meaning agrees or conflicts with its ink color. Your job is
+              to respond to the <strong>ink color</strong>, not to read the
+              word. This is not a diagnosis, IQ test, or validated assessment of
+              general ability.
+            </p>
+            <p>Use the keys shown below.</p>
+            <StroopKeyLegend />
+            <p>
+              You can first check the key mapping and then complete 12 practice
+              trials with feedback. The main task has 60 trials and no
+              correctness feedback. Respond as accurately and promptly as you
+              can. A trial ends after your first valid mapped key or after 2
+              seconds if no valid mapped response is received.
             </p>
             <p>
-              You will complete 12 practice trials and 60 main trials. Respond
-              with the key shown for the ink color, not the word's meaning.
-              Speed and accuracy are both recorded.
+              You may take or skip a self-paced break after trial 30. Your
+              results describe this task session only. Browser timing, keyboard,
+              and color perception can affect responses.
             </p>
-            <p className="stroop-intro__timing">
-              A session typically takes several minutes, depending on response
-              pace and whether you take the optional break. Browser, keyboard,
-              display, and device timing may affect recorded reaction times.
-            </p>
-            <StroopKeyLegend />
+            <h2 className="stroop-intro__subheading">Before you start</h2>
+            <ul className="stroop-intro__list">
+              <li>
+                <strong>What is recorded:</strong> for each trial, the key you
+                pressed (or none), whether it matched the ink color, and the
+                time your browser measured. Nothing is saved or sent anywhere:
+                the data stays in this page and is gone when you leave or reload
+                it.
+              </li>
+              <li>
+                <strong>You can stop at any time.</strong> You can pause or exit
+                during the task, or simply leave this page. Leaving early is not
+                a failure.
+              </li>
+              <li>
+                This task may not work well, and you are welcome to stop, if you
+                are unfamiliar with the English color words, cannot easily tell
+                the four ink colors apart, or use a keyboard that does not type
+                the letters D, F, J, and K.
+              </li>
+            </ul>
             <div className="stroop-actions">
               <Button type="button" onClick={() => session.beginSession()}>
                 Start Stroop
@@ -408,6 +460,7 @@ export function StroopExperimentPage({
             </div>
           </Card>
         ) : null}
+        {results ? <StroopResults results={results} /> : null}
       </div>
 
       {exitConfirmOpen ? (

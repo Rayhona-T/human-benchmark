@@ -357,22 +357,35 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
 
                 // Protocol §7 step 6: end the stimulus on the next frame and
                 // start the 500 ms interval from that offset callback.
-                offsetFrameRef.current = window.requestAnimationFrame(() => {
-                  offsetFrameRef.current = null;
-                  const showFeedback =
-                    phase === "practice" &&
-                    config.feedbackEnabled &&
-                    outcome.category !== "invalid";
-                  flushSync(() => {
-                    setActiveTrial(null);
-                    setFeedback(showFeedback ? (latest ?? null) : null);
-                    setTrialStage(showFeedback ? "feedback" : "iti");
-                  });
-                  itiTimeoutRef.current = window.setTimeout(() => {
-                    itiTimeoutRef.current = null;
-                    prepareNextTrialRef.current(phase);
-                  }, config.interTrialIntervalMs);
-                });
+                offsetFrameRef.current = window.requestAnimationFrame(
+                  (offsetTimestamp) => {
+                    offsetFrameRef.current = null;
+                    // Same convention as onset: the frame callback timestamp.
+                    currentLifecycle.dispatch({
+                      type: "RECORD_TRIAL_TIMING",
+                      trialId: trial.trialId,
+                      stimulusOffsetMs: offsetTimestamp,
+                    });
+                    const showFeedback =
+                      phase === "practice" &&
+                      config.feedbackEnabled &&
+                      outcome.category !== "invalid";
+                    flushSync(() => {
+                      setActiveTrial(null);
+                      setFeedback(showFeedback ? (latest ?? null) : null);
+                      setTrialStage(showFeedback ? "feedback" : "iti");
+                    });
+                    itiTimeoutRef.current = window.setTimeout(() => {
+                      itiTimeoutRef.current = null;
+                      currentLifecycle.dispatch({
+                        type: "RECORD_TRIAL_TIMING",
+                        trialId: trial.trialId,
+                        itiEndMs: performance.now(),
+                      });
+                      prepareNextTrialRef.current(phase);
+                    }, config.interTrialIntervalMs);
+                  },
+                );
               },
             );
             runtimeRef.current = runtime;
@@ -408,7 +421,7 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
   }, [prepareNextTrial]);
 
   const beginSession = useCallback(
-    (seedOverride?: number) => {
+    (explicitSeed?: number) => {
       if (sessionStartedRef.current) return;
       sessionStartedRef.current = true;
       clearTrialTimers();
@@ -417,8 +430,11 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
       breakOfferedRef.current = false;
       breakActionRef.current = false;
       breakStartRef.current = null;
+      // Test/dev seam: an explicit argument, else the hook's override, else a
+      // cryptographically secure seed (the production path).
+      const requestedSeed = explicitSeed ?? seedOverride;
       const seed =
-        seedOverride === undefined ? createSessionSeed() : seedOverride;
+        requestedSeed === undefined ? createSessionSeed() : requestedSeed;
       if (seed === null) {
         setScreen("technical");
         setTrialStage("idle");
@@ -438,6 +454,10 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
             scheduleGenerationStatus: "generated",
             realizedPracticeOrder: schedule.metadata.realizedPracticeOrder,
             realizedMainOrder: schedule.metadata.realizedMainOrder,
+            allocationDetails: {
+              selectedDerangement: schedule.metadata.selectedDerangement,
+              practiceSeedUnsigned32: schedule.metadata.practiceSeedUnsigned32,
+            },
           },
         );
         lifecycle.dispatch({ type: "OPEN_INSTRUCTIONS" });
@@ -459,7 +479,13 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
         setTrialStage("idle");
       }
     },
-    [clearTrialTimers, disposeRuntime, setTrialStage, stopBreakInterruption],
+    [
+      clearTrialTimers,
+      disposeRuntime,
+      seedOverride,
+      setTrialStage,
+      stopBreakInterruption,
+    ],
   );
 
   const beginPractice = useCallback(() => {

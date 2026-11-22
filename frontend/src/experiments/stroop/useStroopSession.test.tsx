@@ -321,6 +321,34 @@ describe("useStroopSession (browser-timed participant flow)", () => {
     expect(hook.result.current.screen).toBe("break");
   });
 
+  it("pauses the break on interruption and resumes it without adding or skipping trials", () => {
+    const hook = setup();
+    finishPracticeAndStartMain(hook);
+    for (let index = 0; index < 30; index++) {
+      presentStimulus();
+      timeOutAndFinishIti();
+    }
+    expect(hook.result.current.screen).toBe("break");
+    blurWindow();
+    expect(hook.result.current.screen).toBe("paused");
+    expect(hook.result.current.pauseContext).toBe("break");
+    advance(10_000);
+    expect(snapshot(hook).records).toHaveLength(42);
+    act(() => hook.result.current.resumeSession());
+    expect(hook.result.current.screen).toBe("break");
+    act(() => hook.result.current.continueBreak());
+    expect(hook.result.current.activeTrial?.index).toBe(31);
+    presentStimulus();
+    timeOutAndFinishIti();
+    const main = snapshot(hook).records.filter(
+      (record) => record.phase === "main",
+    );
+    expect(main.map((record) => record.trialIndex)).toEqual(
+      Array.from({ length: 31 }, (_, index) => index + 1),
+    );
+    expect(snapshot(hook).breakTaken).toBe(true);
+  });
+
   it("records a taken break with its duration and ignores a second break action", () => {
     const hook = setup();
     finishPracticeAndStartMain(hook);
@@ -355,6 +383,134 @@ describe("useStroopSession (browser-timed participant flow)", () => {
     expect(vi.getTimerCount()).toBe(0);
     press("d");
     expect(snapshot(hook).records).toHaveLength(1);
+  });
+
+  describe("stimulus offset and ITI end timestamps (U2)", () => {
+    it("records offset from the offset frame and ITI end 500 ms later for a response", () => {
+      const hook = setup();
+      startPractice(hook);
+      presentStimulus();
+      advance(300);
+      press("d");
+      expect(snapshot(hook).records[0].timing.stimulusOffsetMs).toBeNull();
+      nextFrame();
+      const offsetFrameTime = performance.now();
+      const afterOffset = snapshot(hook).records[0].timing;
+      expect(afterOffset.stimulusOffsetMs).toBe(offsetFrameTime);
+      expect(afterOffset.stimulusOffsetMs!).toBeGreaterThanOrEqual(
+        afterOffset.responseTimestampMs!,
+      );
+      expect(afterOffset.itiEndMs).toBeNull();
+      advance(STROOP_CONFIGURATION.practice.interTrialIntervalMs);
+      const timing = snapshot(hook).records[0].timing;
+      expect(timing.itiEndMs! - timing.stimulusOffsetMs!).toBe(500);
+      expect(timing.fixationOnsetMs!).toBeLessThan(timing.stimulusOnsetMs!);
+    });
+
+    it("records offset at the first frame at or after the deadline for a timeout", () => {
+      const hook = setup();
+      startPractice(hook);
+      presentStimulus();
+      timeOutAndFinishIti();
+      const timing = snapshot(hook).records[0].timing;
+      expect(snapshot(hook).records[0].outcome.category).toBe("timeout");
+      expect(timing.stimulusOffsetMs!).toBeGreaterThanOrEqual(
+        timing.deadlineMs!,
+      );
+      expect(timing.itiEndMs! - timing.stimulusOffsetMs!).toBe(500);
+    });
+
+    it("leaves both timestamps null for a trial invalidated by an interruption", () => {
+      const hook = setup();
+      startPractice(hook);
+      presentStimulus();
+      blurWindow();
+      advance(5000);
+      act(() => hook.result.current.resumeSession());
+      presentStimulus();
+      const [invalidated] = snapshot(hook).records;
+      expect(invalidated.outcome.category).toBe("invalid");
+      expect(invalidated.timing.stimulusOffsetMs).toBeNull();
+      expect(invalidated.timing.itiEndMs).toBeNull();
+    });
+
+    it("keeps ITI end null when the interval is cut short by a pause, and does not fill it later", () => {
+      const hook = setup();
+      startPractice(hook);
+      presentStimulus();
+      press("d");
+      nextFrame();
+      advance(200);
+      act(() => {
+        expect(hook.result.current.pauseSession()).toBe(true);
+      });
+      act(() => hook.result.current.resumeSession());
+      presentStimulus();
+      press("d");
+      nextFrame();
+      advance(500);
+      const [first, second] = snapshot(hook).records;
+      expect(first.timing.stimulusOffsetMs).not.toBeNull();
+      expect(first.timing.itiEndMs).toBeNull();
+      expect(second.timing.itiEndMs).not.toBeNull();
+    });
+
+    it("leaves ITI end null when the session is aborted during the interval", () => {
+      const hook = setup();
+      startPractice(hook);
+      presentStimulus();
+      press("d");
+      nextFrame();
+      act(() => hook.result.current.abortSession());
+      advance(5000);
+      const [record] = snapshot(hook).records;
+      expect(record.timing.stimulusOffsetMs).not.toBeNull();
+      expect(record.timing.itiEndMs).toBeNull();
+      expect(snapshot(hook).records).toHaveLength(1);
+    });
+
+    it("records offset and ITI end for every trial of a full session, including trials 12, 30, and 60", () => {
+      const hook = setup();
+      finishPracticeAndStartMain(hook);
+      for (let index = 0; index < 30; index++) {
+        presentStimulus();
+        timeOutAndFinishIti();
+      }
+      act(() => hook.result.current.continueBreak());
+      for (let index = 0; index < 30; index++) {
+        presentStimulus();
+        timeOutAndFinishIti();
+      }
+      const final = snapshot(hook);
+      expect(final.status).toBe("complete");
+      expect(final.records).toHaveLength(72);
+      for (const record of final.records) {
+        const timing = record.timing;
+        const label = `${record.phase} ${record.trialIndex}`;
+        expect(timing.fixationOnsetMs, label).not.toBeNull();
+        expect(
+          timing.stimulusOnsetMs! - timing.fixationOnsetMs!,
+          label,
+        ).toBeGreaterThanOrEqual(500);
+        expect(timing.deadlineMs! - timing.stimulusOnsetMs!, label).toBe(2000);
+        expect(timing.stimulusOffsetMs!, label).toBeGreaterThanOrEqual(
+          timing.deadlineMs!,
+        );
+        expect(timing.itiEndMs! - timing.stimulusOffsetMs!, label).toBe(500);
+      }
+    });
+
+    it("stores the selected derangement with the session randomization metadata", () => {
+      const hook = setup();
+      startPractice(hook);
+      presentStimulus();
+      press("d");
+      const record = snapshot(hook).records[0];
+      expect(record.randomization.allocationDetails).toEqual({
+        selectedDerangement: [1, 0, 3, 2],
+        practiceSeedUnsigned32: 2654436715,
+      });
+    });
   });
 
   it("clears timers and listeners on unmount during an active trial", () => {

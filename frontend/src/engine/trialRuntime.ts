@@ -264,6 +264,7 @@ export class TrialRuntime<
         outcome.category === "timeout"
           ? this.deadlineMs
           : (response?.timestampMs ?? this.clock.now()),
+      stimulusOffsetMs: null,
       itiEndMs: null,
       reactionTimeMs: reactionTime,
       trialDurationMs: duration,

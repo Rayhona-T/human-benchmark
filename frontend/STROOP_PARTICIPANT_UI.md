@@ -2,7 +2,12 @@
 
 ## Participant flow
 
-1. Introduction with task purpose and timing limitations.
+1. Introduction using the protocol §3 participant text: purpose, key
+   mapping, 2 s response limit, practice/main feedback rules, optional break,
+   what is recorded (and that nothing is saved or sent), the ability to stop
+   at any time, and an invitation to stop for participants unfamiliar with
+   the English color words, unable to tell the ink colors apart, or whose
+   keyboard does not type D, F, J, and K.
 2. Instructions and key-demonstration check.
 3. 12 practice trials with feedback.
 4. Explicit practice-to-main transition.
@@ -87,7 +92,11 @@ controls, and reduced-motion preferences. Focus moves to the heading of each
 non-trial screen (instructions, ready, break, paused, completed, ended,
 technical error). The trial counter is not a live region, so screen readers are
 not interrupted on every trial. The key check echoes each recognized key and
-its color (for example, "D = Red: recognized"). The Stroop stimulus deliberately
+its color (for example, "D = Red: recognized"). Each screen change resets
+the page scroll to the top, so the session bar (progress, Pause, Exit) is
+never left under the sticky site header; heading focus uses
+`preventScroll`. The stimulus element carries no `aria-label` (prohibited
+on a generic element); its text content is the word. The Stroop stimulus deliberately
 depends on color-word presentation and a four-key response, so color-vision,
 motor, keyboard-layout, and reading-language differences may prevent or
 reduce comparable participation.
@@ -95,8 +104,39 @@ reduce comparable participation.
 The implementation has not undergone a formal WCAG 2.2 or cross-browser
 certification audit.
 
-## Recorded data not yet captured
+## Recorded timestamps
 
-`itiEndMs` and a separate stimulus-offset timestamp remain `null` in trial
-records: the lifecycle has no action to amend a record after the trial settles.
-Adding one is an engine-contract change awaiting a decision.
+All values use the `performance.now()` time origin. Frame timestamps are
+`requestAnimationFrame` callback times, not measured display/photon times.
+
+| Field                 | Recorded when                                                                | Source                 |
+| --------------------- | ---------------------------------------------------------------------------- | ---------------------- |
+| `fixationOnsetMs`     | Fixation cross committed to the DOM                                          | `performance.now()`    |
+| `stimulusOnsetMs`     | First frame that can paint the stimulus                                      | rAF callback timestamp |
+| `responseTimestampMs` | First valid mapped keydown handler                                           | `performance.now()`    |
+| `deadlineMs`          | `stimulusOnsetMs + 2000`                                                     | derived                |
+| `trialEndMs`          | Engine settle: response timestamp, or the deadline                           | engine                 |
+| `stimulusOffsetMs`    | Frame that removed the stimulus (protocol §7.6 / conventions §3 "trial end") | rAF callback timestamp |
+| `itiEndMs`            | 500 ms interval timer completed, before the next fixation/break/completion   | `performance.now()`    |
+
+`stimulusOffsetMs` and `itiEndMs` are added after the trial settles through the
+lifecycle action `RECORD_TRIAL_TIMING`, which only fills empty fields on the
+latest record and enforces `onset ≤ offset ≤ itiEnd`.
+
+They stay `null`, deliberately, when the event did not happen:
+
+- **Invalid (interrupted) trial:** the session pauses and the stimulus is
+  removed without an offset frame or interval, so both are `null`.
+- **Pause or exit during the interval:** the interval never completed, so
+  `itiEndMs` is `null` (the offset is kept).
+- **Abort before the offset frame:** both `null`.
+- **Unpresented trials:** no record exists.
+
+A frame callback timestamp is the frame's start time, so in a real browser
+`stimulusOffsetMs` can be marginally earlier than the response handler
+timestamp of the same frame; values are recorded as observed, not adjusted.
+`trialEndMs` keeps its Cycle 4 meaning; the protocol's "trial end" frame is
+`stimulusOffsetMs`.
+
+The session's randomization metadata also carries `allocationDetails`
+(`selectedDerangement`, `practiceSeedUnsigned32`), as protocol §8.7 requires.

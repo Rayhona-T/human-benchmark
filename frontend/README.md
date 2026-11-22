@@ -138,3 +138,6 @@ does not render or execute experiment UI.
 
 The participant presentation is documented in `STROOP_PARTICIPANT_UI.md` and
 is available at `/experiments/stroop`.
+
+Session results (calculations, eligibility rules, and participant-facing
+presentation) are documented in `STROOP_RESULTS.md`.

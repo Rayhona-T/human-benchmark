@@ -188,3 +188,20 @@ abort, technical timing failure, and race-safe one-time settlement.
 Remaining future integration risks are UI routing of lifecycle actions,
 browser keyboard event timestamp fidelity, and external timing validation.
 Those risks do not block the engine contract foundation.
+
+## Cycle 5 Task 4 additions
+
+Minimal, backward-compatible contract changes made during the Stroop audit:
+
+- `TimingMetadata.stimulusOffsetMs` (frame that removed the stimulus) joins
+  `itiEndMs`. Both start `null` in every record.
+- Lifecycle action `RECORD_TRIAL_TIMING { trialId, stimulusOffsetMs?, itiEndMs? }`
+  fills those two fields after settlement. It accepts only the latest record,
+  only in `practice`, `main`, or `ready`, never overwrites a value, and
+  rejects non-finite, negative, or out-of-order values (`invalid_timing_record`).
+- `RandomizationMetadata.allocationDetails` (optional) carries
+  experiment-specific allocation data needed to reproduce a schedule.
+- Snapshots and session records copy each record's `timing` object, so callers
+  cannot mutate engine records through them.
+
+The engine remains React-independent; Cycle 4 tests are unchanged and pass.

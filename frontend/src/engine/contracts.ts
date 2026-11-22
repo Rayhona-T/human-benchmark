@@ -113,7 +113,16 @@ export interface TimingMetadata {
   stimulusOnsetMs: number | null;
   responseTimestampMs: number | null;
   deadlineMs: number | null;
+  /** Engine settle time: response handler timestamp, or the deadline. */
   trialEndMs: number | null;
+  /**
+   * Animation-frame callback timestamp of the frame that removed the stimulus
+   * after a response or timeout (the protocol's stimulus offset / "trial end").
+   * Null when no such frame occurred (e.g. trial invalidated by interruption,
+   * or the session ended before it).
+   */
+  stimulusOffsetMs: number | null;
+  /** Monotonic time the inter-trial interval completed; null if it did not. */
   itiEndMs: number | null;
   reactionTimeMs: number | null;
   trialDurationMs: number | null;
@@ -127,6 +136,11 @@ export interface RandomizationMetadata {
   scheduleGenerationStatus: "not_started" | "generated" | "failed";
   realizedPracticeOrder: readonly unknown[];
   realizedMainOrder: readonly unknown[];
+  /**
+   * Experiment-specific stimulus-allocation details needed to reproduce the
+   * schedule (e.g. Stroop's selected derangement). Optional and read-only.
+   */
+  allocationDetails?: Readonly<Record<string, unknown>>;
 }
 
 export interface TrialRecord<
