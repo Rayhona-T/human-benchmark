@@ -5,6 +5,7 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 import { DesignSystemPage } from "../pages/DesignSystemPage";
 import { ExperimentsPage } from "../pages/ExperimentsPage";
 import { MethodologyPage } from "../pages/MethodologyPage";
+import { StroopExperimentPage } from "../experiments/stroop/StroopExperimentPage";
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +14,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "experiments", element: <ExperimentsPage /> },
       { path: "methodology", element: <MethodologyPage /> },
+      { path: "experiments/stroop", element: <StroopExperimentPage /> },
       { path: "design-system", element: <DesignSystemPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],

@@ -2,6 +2,7 @@ import { usePageTitle } from "../app/usePageTitle";
 import { Badge } from "../components/ui/Badge";
 import { Card } from "../components/ui/Card";
 import "./Page.css";
+import { Link } from "react-router-dom";
 
 export function ExperimentsPage() {
   usePageTitle("Experiments");
@@ -12,9 +13,9 @@ export function ExperimentsPage() {
         <p className="page-eyebrow">Experiment catalogue</p>
         <h1>Experiments</h1>
         <p className="page-intro">
-          The initial catalogue consists of two research-inspired task families.
-          Both remain unavailable until their implementation cycles are approved
-          and completed.
+          The initial catalogue includes Stroop, which is available for
+          participation. Flanker remains part of the future implementation
+          cycle.
         </p>
       </header>
 
@@ -28,15 +29,18 @@ export function ExperimentsPage() {
               <p className="page-card-label">Color-word task</p>
               <h2>Stroop Effect</h2>
             </div>
-            <Badge tone="warning">Upcoming</Badge>
+            <Badge tone="success">Available for practice</Badge>
           </div>
           <p>
             Explore how responses may change when a word meaning conflicts with
             the color used to display it.
           </p>
           <p className="experiment-card__status">
-            Protocol approved. Experiment implementation is not started.
+            Protocol approved. Participant experience available.
           </p>
+          <Link className="experiment-card__action" to="/experiments/stroop">
+            Start Stroop
+          </Link>
         </Card>
 
         <Card elevated>

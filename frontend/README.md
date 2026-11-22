@@ -128,3 +128,13 @@ event source, interruption event source, response-input controller, and trial
 runtime. Browser timing uses `performance.now()` and is expressly documented as
 browser-recorded rather than physical stimulus onset. Test implementations use
 fake clocks and schedulers.
+
+## Stroop adapter
+
+The approved Stroop configuration and schedule generator are under
+`src/experiments/stroop/`. `STROOP_ADAPTER.md` documents protocol mapping,
+stimulus rules, schedule constraints, and seed reproducibility. This adapter
+does not render or execute experiment UI.
+
+The participant presentation is documented in `STROOP_PARTICIPANT_UI.md` and
+is available at `/experiments/stroop`.

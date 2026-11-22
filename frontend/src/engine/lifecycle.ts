@@ -30,7 +30,7 @@ export type LifecycleAction<TResponse = string> =
   | { type: "TAKE_BREAK"; durationMs: number }
   | { type: "SKIP_BREAK" }
   | { type: "CONTINUE_AFTER_BREAK" }
-  | { type: "PAUSE"; resumePhase?: PracticeOrMain }
+  | { type: "PAUSE"; resumePhase?: PracticeOrMain | "break" }
   | { type: "RESUME" }
   | { type: "TECHNICAL_ERROR" }
   | { type: "ABORT" }
@@ -384,7 +384,7 @@ export class ExperimentLifecycle<
     return { ok: true };
   }
 
-  private pause(resumePhase?: PracticeOrMain): LifecycleResult {
+  private pause(resumePhase?: PracticeOrMain | "break"): LifecycleResult {
     if (
       this.state !== "practice" &&
       this.state !== "main" &&
@@ -411,9 +411,7 @@ export class ExperimentLifecycle<
     }
     this.state = this.resumePhase;
     this.phase = this.resumePhase;
-    this.activeTrial = this.resumeActiveTrial
-      ? { ...this.resumeActiveTrial }
-      : null;
+    this.activeTrial = null;
     this.resumePhase = null;
     this.resumeActiveTrial = null;
     return { ok: true };

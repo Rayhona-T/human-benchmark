@@ -49,6 +49,8 @@ export class TrialRuntime<
   >;
   private readonly clock: MonotonicClock;
   private readonly scheduler: DeadlineScheduler;
+  private readonly onSettled:
+    ((outcome: TrialOutcome, trialId: string) => void) | null;
 
   constructor(
     lifecycle: ExperimentLifecycle<TStimulus, TCondition, TResponse>,
@@ -58,6 +60,7 @@ export class TrialRuntime<
     mappings: readonly ResponseMapping<TResponse>[],
     interruptionSource: InterruptionEventSource,
     timingSource: "performance.now" | "injected" = "injected",
+    onSettled: ((outcome: TrialOutcome, trialId: string) => void) | null = null,
   ) {
     this.lifecycle = lifecycle;
     this.clock = clock;
@@ -67,11 +70,13 @@ export class TrialRuntime<
       interruptionSource,
     );
     this.timingSource = timingSource;
+    this.onSettled = onSettled;
   }
 
   start(
     trial: EngineTrial<TStimulus, TCondition, TResponse>,
     deadlineMs: number,
+    stimulusOnsetOverrideMs?: number,
   ): TrialRuntimeStartResult {
     if (this.status !== "inactive") {
       return { ok: false, reason: "lifecycle_rejected" };
@@ -97,7 +102,10 @@ export class TrialRuntime<
       return { ok: false, reason: "lifecycle_rejected" };
     }
 
-    const onset = this.clock.now();
+    const onset =
+      stimulusOnsetOverrideMs === undefined
+        ? this.clock.now()
+        : stimulusOnsetOverrideMs;
     if (
       !Number.isFinite(onset) ||
       onset < 0 ||
@@ -268,6 +276,7 @@ export class TrialRuntime<
       this.input.complete();
     }
     this.interruptionController.stop();
+    this.onSettled?.(outcome, this.trial.trialId);
   }
 
   dispose(): void {
