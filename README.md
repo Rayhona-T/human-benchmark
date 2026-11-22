@@ -24,7 +24,7 @@ The project emphasizes transparent methods and scientific context. It is not a c
 
 ## Development status
 
-Cycle 1 — Foundation complete. Cycle 2 — Scientific Protocol & Literature is next and has not started. No application functionality or experiments have been implemented, and no scientific results are being reported.
+Cycles 1–7 are complete: Stroop and Flanker run in the browser, with session results and a local CSV export. Cycle 8 Tasks 1+2 added a standalone backend foundation in [backend/](backend/) (FastAPI, SQLite for development, PostgreSQL planned). It is awaiting review and is **not yet connected to the experiments**; no participant data is stored. See [docs/ROADMAP.md](docs/ROADMAP.md) for status. No scientific results are being reported.
 
 ## Screenshots and demo
 

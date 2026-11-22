@@ -1,0 +1,44 @@
+[project]
+name = "human-benchmark-backend"
+version = "0.1.0"
+description = "HUMAN BENCHMARK backend foundation (Cycle 8). Local development only."
+requires-python = ">=3.12"
+# Exact pinned versions live in requirements.txt and requirements-dev.txt.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"
+filterwarnings = [
+  "error",
+  # Starlette's TestClient now suggests a different HTTP client package.
+  # httpx is the client FastAPI documents and requires for TestClient; this
+  # notice concerns tests only and does not affect the running app.
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = [
+  "S101",  # assert is used for type narrowing and in tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
+"migrations/**" = ["S608"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["app", "migrations", "tests"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false

@@ -41,7 +41,10 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 7 — Analysis & Results | In progress — Task 1+2 complete; Task 3+4 complete, awaiting human approval |
 | Cycle 7 — Task 1+2: Scientific Analysis Framework, Results Methodology & Architecture | Complete — decisions approved for implementation (`HB-ANALYSIS-1.1`) |
 | Cycle 7 — Task 3+4: Participant Results Experience, Scientific Audit & Approval Readiness | Complete — awaiting human approval |
-| Cycle 8 — Backend & Persistence | Planned — not started |
+| Cycle 8 — Backend & Persistence | In progress — Tasks 1+2 complete, awaiting human review |
+| Cycle 8 — Tasks 1+2: Backend Architecture, Data Policy & Foundation | Complete — awaiting human review ([BACKEND_ARCHITECTURE.md](backend/BACKEND_ARCHITECTURE.md), [DATA_AND_PRIVACY.md](backend/DATA_AND_PRIVACY.md), [API.md](backend/API.md), [ADR-001](decisions/ADR-001-backend-stack.md)) |
+| Cycle 8 — Task 3: Frontend persistence integration (consent, opt-in save, participant key) | Not started |
+| Cycle 8 — Task 4: End-to-end audit & approval | Not started |
 | Cycle 9 — Personal Observatory | Planned — not started |
 | Cycle 10 — Testing, Pilot & Deployment | Planned — not started |
 | Application product implementation | Not started |
