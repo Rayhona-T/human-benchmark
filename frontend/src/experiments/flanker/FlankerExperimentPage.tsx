@@ -16,7 +16,10 @@ import {
   evaluateMappingCheckKey,
 } from "./flanker";
 import { computeFlankerResults } from "./flankerAnalysis";
-import { FLANKER_RESULTS_COPY } from "./flankerResultsCopy";
+import {
+  FLANKER_EXPORT_COLUMNS,
+  FLANKER_RESULTS_COPY,
+} from "./flankerResultsCopy";
 import { FlankerArray } from "./FlankerStimulus";
 import { useFlankerSession } from "./useFlankerSession";
 import "./FlankerExperiment.css";
@@ -149,12 +152,15 @@ export function FlankerExperimentPage({
     }
     const snapshot = getSnapshot();
     if (!snapshot) return null;
-    return computeFlankerResults({
-      status: snapshot.status,
+    return {
       records: snapshot.records,
-      breakTaken: snapshot.breakTaken,
-      breakDurationMs: snapshot.breakDurationMs,
-    });
+      analysis: computeFlankerResults({
+        status: snapshot.status,
+        records: snapshot.records,
+        breakTaken: snapshot.breakTaken,
+        breakDurationMs: snapshot.breakDurationMs,
+      }),
+    };
   }, [getSnapshot, screen]);
 
   const tooNarrowMessage = (
@@ -335,7 +341,16 @@ export function FlankerExperimentPage({
         completionDescription="You completed the Flanker task. The task explores condition differences in responding to a center arrow surrounded by arrows pointing the same way, arrows pointing the other way, or dashes. This screen does not provide a cognitive score or diagnosis."
         results={
           results ? (
-            <SessionResults results={results} copy={FLANKER_RESULTS_COPY} />
+            <SessionResults
+              results={results.analysis}
+              copy={FLANKER_RESULTS_COPY}
+              responseWindowMs={FLANKER_CONFIGURATION.main.responseDeadlineMs}
+              exportData={{
+                experimentId: "flanker",
+                records: results.records,
+                stimulusColumns: FLANKER_EXPORT_COLUMNS,
+              }}
+            />
           ) : null
         }
         presentationUnavailable={{

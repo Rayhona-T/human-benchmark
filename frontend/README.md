@@ -153,4 +153,8 @@ is documented in `FLANKER_ADAPTER.md` and the participant experience in
 
 Stroop and Flanker share the session flow, analysis, results presentation,
 session shell, and deterministic randomization in `src/experiments/shared/`,
-documented in `EXPERIMENT_SESSION_ARCHITECTURE.md`.
+documented in `EXPERIMENT_SESSION_ARCHITECTURE.md`. The shared analysis
+methodology (`HB-ANALYSIS-1.1`) is documented in `ANALYSIS_METHODOLOGY.md`.
+The participant results page (response-time dot plot, distribution summary,
+contrasts, speed–accuracy notes, and local CSV export) is documented in
+`RESULTS_EXPERIENCE.md` and `EXPORT_DATA_DICTIONARY.md`.

@@ -397,9 +397,13 @@ describe("StroopExperimentPage results integration", () => {
     expect(
       screen.getByText(/response accuracy 83\.3% \(50 of 60\)/),
     ).toBeInTheDocument();
-    const table = screen.getByRole("table");
+    const table = screen.getByRole("table", {
+      name: "Main-trial results by condition (practice excluded)",
+    });
     // Every correct RT is 420 ms after the recorded onset frame.
     expect(within(table).getAllByText("420 ms").length).toBe(3);
     expect(screen.getAllByText("0 ms").length).toBe(3);
-  });
+    // Full 72-trial session plus the results page: allow time when the
+    // suite runs in parallel (assertions unchanged).
+  }, 30_000);
 });

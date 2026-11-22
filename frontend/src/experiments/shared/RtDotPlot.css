@@ -1,0 +1,111 @@
+/* Response-time dot plot. Mark colors were validated with the data-viz
+   palette checks (lightness, chroma, CVD and normal-vision separation, and
+   >= 3:1 contrast on the light surface): correct #2563eb, incorrect #eb6834.
+   Incorrect responses also differ by shape (ring), so color is never the
+   only cue. */
+
+.rt-plot {
+  --rt-correct: #2563eb;
+  --rt-incorrect: #eb6834;
+  --rt-surface: var(--surface-raised);
+  --rt-grid: var(--border-default);
+  --rt-axis: var(--border-strong);
+  width: 100%;
+  margin-top: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--rt-surface);
+  padding: var(--space-3) 0 var(--space-2);
+  overflow: hidden;
+}
+
+.rt-plot__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-4);
+  list-style: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.rt-plot__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rt-plot__svg {
+  display: block;
+  max-width: 100%;
+  font-family: var(--font-sans);
+}
+
+.rt-plot__dot--correct {
+  fill: var(--rt-correct);
+  stroke: var(--rt-surface);
+  stroke-width: 2px;
+}
+
+.rt-plot__dot--incorrect {
+  fill: var(--rt-surface);
+  stroke: var(--rt-incorrect);
+  stroke-width: 2px;
+}
+
+.rt-plot__median {
+  stroke: var(--text-primary);
+  stroke-width: 2px;
+}
+
+.rt-plot__grid {
+  stroke: var(--rt-grid);
+  stroke-width: 1px;
+}
+
+.rt-plot__axis {
+  stroke: var(--rt-axis);
+  stroke-width: 1px;
+}
+
+.rt-plot__row-label {
+  font-size: 13px;
+  fill: var(--text-primary);
+}
+
+.rt-plot__row-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.rt-plot__row-median {
+  fill: var(--text-secondary);
+}
+
+.rt-plot__row-meta {
+  font-size: 12px;
+  fill: var(--text-tertiary);
+}
+
+.rt-plot__tick {
+  font-size: 11px;
+  fill: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rt-plot__axis-title {
+  font-size: 12px;
+  fill: var(--text-secondary);
+}
+
+@media (forced-colors: active) {
+  .rt-plot__dot--correct {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+
+  .rt-plot__dot--incorrect {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+}

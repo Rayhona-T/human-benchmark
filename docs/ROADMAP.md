@@ -38,7 +38,9 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 6 — Flanker Implementation | In progress — Tasks 1+2 approved; Tasks 3+4 complete, awaiting human approval |
 | Cycle 6 — Task 1+2: Flanker Scientific Protocol, Architecture & Engine Integration | Approved (protocol approved as `HB-FLANKER-1.0`; decisions in protocol §14) |
 | Cycle 6 — Task 3+4: Flanker Participant Experience, Final Audit & Approval Readiness | Complete — awaiting human approval |
-| Cycle 7 — Analysis & Results | Planned — not started |
+| Cycle 7 — Analysis & Results | In progress — Task 1+2 complete; Task 3+4 complete, awaiting human approval |
+| Cycle 7 — Task 1+2: Scientific Analysis Framework, Results Methodology & Architecture | Complete — decisions approved for implementation (`HB-ANALYSIS-1.1`) |
+| Cycle 7 — Task 3+4: Participant Results Experience, Scientific Audit & Approval Readiness | Complete — awaiting human approval |
 | Cycle 8 — Backend & Persistence | Planned — not started |
 | Cycle 9 — Personal Observatory | Planned — not started |
 | Cycle 10 — Testing, Pilot & Deployment | Planned — not started |

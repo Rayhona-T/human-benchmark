@@ -282,7 +282,9 @@ describe("FlankerExperimentPage", () => {
     createFlankerSchedule(SEED).main.forEach((trial) => {
       tally[trial.condition][planFor(trial.index)] += 1;
     });
-    const table = screen.getByRole("table");
+    const table = screen.getByRole("table", {
+      name: "Main-trial results by condition (practice excluded)",
+    });
     const row = (label: string) =>
       within(table)
         .getByRole("rowheader", { name: new RegExp(`^${label}`) })
@@ -334,5 +336,7 @@ describe("FlankerExperimentPage", () => {
         /how often each condition followed each other condition was not controlled/,
       ),
     ).toBeInTheDocument();
-  });
+    // Full 72-trial session plus the results page: allow time when the
+    // suite runs in parallel (assertions unchanged).
+  }, 30_000);
 });

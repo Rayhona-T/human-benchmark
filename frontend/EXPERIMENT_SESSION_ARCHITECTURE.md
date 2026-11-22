@@ -40,6 +40,11 @@ session pauses with reason `presentation_unavailable`, and the shell shows the
 experiment's message, with Resume disabled until the experiment reports that
 presentation is possible again. Stroop does not use it.
 
+## Analysis
+
+Definitions, denominators, eligibility, missing-data rules, and the
+`HB-ANALYSIS-1.1` additions are specified in `ANALYSIS_METHODOLOGY.md`.
+
 ## Compatibility
 
 `useStroopSession`, `computeStroopResults`, `StroopResults`, and the Stroop

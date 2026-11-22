@@ -37,12 +37,15 @@ export function StroopExperimentPage({
     }
     const snapshot = getSnapshot();
     if (!snapshot) return null;
-    return computeStroopResults({
-      status: snapshot.status,
+    return {
       records: snapshot.records,
-      breakTaken: snapshot.breakTaken,
-      breakDurationMs: snapshot.breakDurationMs,
-    });
+      analysis: computeStroopResults({
+        status: snapshot.status,
+        records: snapshot.records,
+        breakTaken: snapshot.breakTaken,
+        breakDurationMs: snapshot.breakDurationMs,
+      }),
+    };
   }, [getSnapshot, screen]);
 
   useEffect(() => {
@@ -169,7 +172,11 @@ export function StroopExperimentPage({
         return `${mapping?.label} (${record.correctResponse.toUpperCase()})`;
       }}
       completionDescription="You completed the Stroop task. The task explores condition differences in responding to ink color while words with competing meanings are present. This screen does not provide a cognitive score or diagnosis."
-      results={results ? <StroopResults results={results} /> : null}
+      results={
+        results ? (
+          <StroopResults results={results.analysis} records={results.records} />
+        ) : null
+      }
     />
   );
 }

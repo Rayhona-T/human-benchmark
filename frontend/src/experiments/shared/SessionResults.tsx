@@ -1,19 +1,35 @@
 import type { ReactNode } from "react";
 import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Feedback } from "../../components/ui/Feedback";
-import type {
-  ConditionResult,
-  ContrastResult,
-  InvalidReason,
-  MedianValue,
-  RateValue,
-  SessionResults as SessionResultsData,
+import type { TrialRecord } from "../../engine/contracts";
+import {
+  BASE_COLUMNS_AFTER,
+  BASE_COLUMNS_BEFORE,
+  MISSING,
+  buildTrialCsv,
+  exportFileName,
+  type ExportColumn,
+} from "./exportTrials";
+import { buildRtPlotData } from "./rtPlotData";
+import { RtDotPlot } from "./RtDotPlot";
+import {
+  speedAccuracyDetail,
+  type ConditionResult,
+  type ContrastResult,
+  type InvalidReason,
+  type MedianValue,
+  type RateValue,
+  type RtDistribution,
+  type SessionResults as SessionResultsData,
 } from "./sessionAnalysis";
 import {
   MINUS,
+  SPEED_ACCURACY_CAVEAT,
   describeRateContrastWith,
   describeRtContrastWith,
+  describeSpeedAccuracyWith,
   formatMs,
   formatPercent,
   formatSignedMs,
@@ -158,6 +174,102 @@ function ConditionTable<TCondition extends string>({
   );
 }
 
+function DistributionCell({
+  value,
+  pick,
+  correct,
+  minimum,
+}: {
+  value: RtDistribution;
+  pick: (v: Extract<RtDistribution, { available: true }>) => number;
+  correct: number;
+  minimum: number;
+}) {
+  if (!value.available) {
+    return (
+      <span className="session-results__unavailable">
+        Not shown: {correct} correct (minimum {minimum})
+      </span>
+    );
+  }
+  return (
+    <span className="session-results__value">{formatMs(pick(value))}</span>
+  );
+}
+
+/** Secondary: min, Q1, median, Q3, max of correct RTs (type 7 quartiles). */
+function DistributionTable<TCondition extends string>({
+  conditions,
+  conditionLabel,
+  minimum,
+}: {
+  conditions: readonly ConditionResult<TCondition>[];
+  conditionLabel: Record<TCondition, string>;
+  minimum: number;
+}) {
+  const rows: {
+    label: string;
+    hint: string;
+    pick: (v: Extract<RtDistribution, { available: true }>) => number;
+  }[] = [
+    { label: "Fastest", hint: "minimum", pick: (v) => v.minMs },
+    {
+      label: "Lower quartile",
+      hint: "a quarter were faster",
+      pick: (v) => v.q1Ms,
+    },
+    { label: "Median", hint: "the middle value", pick: (v) => v.medianMs },
+    {
+      label: "Upper quartile",
+      hint: "a quarter were slower",
+      pick: (v) => v.q3Ms,
+    },
+    { label: "Slowest", hint: "maximum", pick: (v) => v.maxMs },
+  ];
+  return (
+    <div
+      className="session-results__table-wrap"
+      tabIndex={0}
+      role="region"
+      aria-label="Spread of response times table"
+    >
+      <table className="session-results__table">
+        <caption>Spread of correct response times in this session (ms)</caption>
+        <thead>
+          <tr>
+            <th scope="col">Summary</th>
+            {conditions.map((condition) => (
+              <th scope="col" key={condition.condition}>
+                {conditionLabel[condition.condition]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.label}>
+              <th scope="row">
+                {row.label}
+                <span className="session-results__hint">{row.hint}</span>
+              </th>
+              {conditions.map((condition) => (
+                <td key={condition.condition}>
+                  <DistributionCell
+                    value={condition.correctRtDistribution}
+                    pick={row.pick}
+                    correct={condition.correctRtCount}
+                    minimum={minimum}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function ContrastCard<TCondition extends string, TId extends string>({
   contrast,
   copy,
@@ -172,6 +284,11 @@ function ContrastCard<TCondition extends string, TId extends string>({
   const rtSecond = label[contrast.rtSecond];
   const rateFirst = label[contrast.rateFirst];
   const rateSecond = label[contrast.rateSecond];
+  const speedAccuracy = describeSpeedAccuracyWith(
+    contrast,
+    speedAccuracyDetail(contrast),
+    label,
+  );
   const entries: {
     label: string;
     formula: string;
@@ -243,6 +360,15 @@ function ContrastCard<TCondition extends string, TId extends string>({
           </div>
         ))}
       </dl>
+      {speedAccuracy ? (
+        <div className="session-results__speed-accuracy">
+          <p className="session-results__speed-accuracy-title">
+            Speed and accuracy together
+          </p>
+          <p>{speedAccuracy}</p>
+          <p className="session-results__hint">{SPEED_ACCURACY_CAVEAT}</p>
+        </div>
+      ) : null}
     </Card>
   );
 }
@@ -259,18 +385,166 @@ function describeBreak(results: SessionResultsData): string {
   return results.breakDurationMs === 0 ? "Skipped" : "Not reached";
 }
 
+function HeadlineRate({
+  label,
+  value,
+  unit,
+  emptyReason,
+}: {
+  label: string;
+  value: RateValue;
+  unit: string;
+  emptyReason: string;
+}) {
+  return (
+    <div className="session-results__headline">
+      <dt>{label}</dt>
+      <dd>
+        {value.available ? (
+          <>
+            <span className="session-results__headline-value">
+              {formatPercent(value.value)}
+            </span>
+            <span className="session-results__headline-basis">
+              {value.numerator} of {value.denominator} {unit}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="session-results__headline-value session-results__headline-value--muted">
+              Unavailable
+            </span>
+            <span className="session-results__headline-basis">
+              {emptyReason}
+            </span>
+          </>
+        )}
+      </dd>
+    </div>
+  );
+}
+
+/** Records and experiment columns for the participant-initiated download. */
+export interface ResultsExport<TStimulus = unknown> {
+  experimentId: string;
+  records: readonly TrialRecord<TStimulus, string, unknown>[];
+  stimulusColumns: readonly ExportColumn<TStimulus>[];
+}
+
+function downloadCsv(fileName: string, text: string) {
+  if (typeof URL === "undefined" || typeof URL.createObjectURL !== "function") {
+    return false;
+  }
+  const url = URL.createObjectURL(
+    new Blob([text], { type: "text/csv;charset=utf-8" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  return true;
+}
+
+function ExportPanel<TStimulus>({
+  results,
+  exportData,
+}: {
+  results: SessionResultsData;
+  exportData: ResultsExport<TStimulus>;
+}) {
+  const columns = [
+    ...BASE_COLUMNS_BEFORE,
+    ...exportData.stimulusColumns,
+    ...BASE_COLUMNS_AFTER,
+  ];
+  const hasRecords = exportData.records.length > 0;
+  return (
+    <section
+      aria-labelledby="results-export"
+      className="session-results__section"
+    >
+      <h2 id="results-export">Your data</h2>
+      <p>
+        You can download every trial recorded in this session, including
+        practice, as a CSV file for a spreadsheet. The file is created in your
+        browser; nothing is uploaded or stored by HUMAN BENCHMARK, and the data
+        is gone once you leave this page.
+      </p>
+      <div className="session-results__export-actions">
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={!hasRecords}
+          onClick={() =>
+            downloadCsv(
+              exportFileName(exportData.experimentId, results.status),
+              buildTrialCsv(
+                exportData.records,
+                {
+                  experimentId: exportData.experimentId,
+                  analysisVersion: results.analysisVersion,
+                  status: results.status,
+                },
+                exportData.stimulusColumns,
+              ),
+            )
+          }
+        >
+          Download trial data (CSV)
+        </Button>
+        {!hasRecords ? (
+          <span className="session-results__hint">
+            No trials were recorded in this session.
+          </span>
+        ) : null}
+      </div>
+      <details className="session-results__details">
+        <summary>What each column means</summary>
+        <p>
+          One row per recorded trial. {MISSING} means the value does not apply
+          or was not recorded; it is never a zero. Times are in milliseconds.
+        </p>
+        <dl className="session-results__dictionary">
+          {columns.map((column) => (
+            <div key={column.name}>
+              <dt>
+                <code>{column.name}</code>
+              </dt>
+              <dd>{column.description}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </section>
+  );
+}
+
 /**
  * Experiment-agnostic results presentation. Wording comes from `copy`; the
  * structure, rules, and calculations are shared by every experiment.
  */
-export function SessionResults<TCondition extends string, TId extends string>({
+export function SessionResults<
+  TCondition extends string,
+  TId extends string,
+  TStimulus = unknown,
+>({
   results,
   copy,
+  responseWindowMs = 2000,
+  exportData,
 }: {
   results: SessionResultsData<TCondition, TId>;
   copy: ResultsCopy<TCondition, TId>;
+  /** Protocol response deadline; the plot's axis spans 0 to this value. */
+  responseWindowMs?: number;
+  exportData?: ResultsExport<TStimulus>;
 }) {
   const minimum = results.minimumCorrectForMedian;
+  const plot = buildRtPlotData(results, responseWindowMs);
   const invalidEntries = Object.entries(results.invalidReasons) as [
     InvalidReason,
     number,
@@ -280,9 +554,9 @@ export function SessionResults<TCondition extends string, TId extends string>({
     <div className="session-results">
       <section
         aria-labelledby="results-status"
-        className="session-results__section"
+        className="session-results__section session-results__overview"
       >
-        <h2 id="results-status">Session status</h2>
+        <h2 id="results-status">Session overview</h2>
         <p>
           {results.isComplete ? (
             <Badge tone="success">Complete</Badge>
@@ -297,13 +571,22 @@ export function SessionResults<TCondition extends string, TId extends string>({
             ? `All ${results.plannedMainTrials} scheduled main trials were presented. The results below describe this one session only.`
             : `The session ended before all ${results.plannedMainTrials} main trials were presented, so only trial counts are shown. Condition results and comparisons are calculated only for complete sessions.`}
         </p>
-      </section>
-
-      <section
-        aria-labelledby="results-recorded"
-        className="session-results__section"
-      >
-        <h2 id="results-recorded">What was recorded</h2>
+        {results.isComplete && results.overallRates ? (
+          <dl className="session-results__headlines">
+            <HeadlineRate
+              label="Response accuracy"
+              value={results.overallRates.responseAccuracy}
+              unit="key presses were correct"
+              emptyReason="no key presses to score"
+            />
+            <HeadlineRate
+              label="Successful response rate"
+              value={results.overallRates.successfulResponseRate}
+              unit="analysable trials ended in a correct response"
+              emptyReason="no analysable trials"
+            />
+          </dl>
+        ) : null}
         <dl className="session-results__stats">
           <div>
             <dt>Main trials presented</dt>
@@ -361,6 +644,13 @@ export function SessionResults<TCondition extends string, TId extends string>({
             errors; they did not happen.
           </p>
         ) : null}
+        {results.correctMissingRt > 0 ? (
+          <Feedback tone="warning" title="Missing response times">
+            {results.correctMissingRt} correct response(s) have no usable
+            recorded response time. They count as correct in every rate but are
+            left out of the response-time summaries.
+          </Feedback>
+        ) : null}
         {results.unrecognizedRecords > 0 ? (
           <Feedback tone="warning" title="Data note">
             {results.unrecognizedRecords} recorded trial(s) could not be
@@ -368,6 +658,43 @@ export function SessionResults<TCondition extends string, TId extends string>({
           </Feedback>
         ) : null}
       </section>
+
+      {plot && results.conditions ? (
+        <section
+          aria-labelledby="results-times"
+          className="session-results__section"
+        >
+          <h2 id="results-times">Response times</h2>
+          <p>
+            Each dot is one correct response, placed by how long it took. Dots
+            stack upward and downward when times are close. The line marks the
+            median: half of the correct responses were faster and half slower.
+            Nothing is removed for being unusually fast or slow.
+          </p>
+          <RtDotPlot
+            data={plot}
+            conditionLabel={copy.conditionLabel}
+            minimumCorrect={minimum}
+            stimulusNoun={copy.stimulusNoun}
+          />
+          <details className="session-results__details">
+            <summary>
+              Spread of response times (fastest, quartiles, slowest)
+            </summary>
+            <p>
+              These describe only the correct responses in this session. They
+              are not typical values for other people. Quartiles use linear
+              interpolation, the method spreadsheet programs use for
+              QUARTILE.INC.
+            </p>
+            <DistributionTable
+              conditions={results.conditions}
+              conditionLabel={copy.conditionLabel}
+              minimum={minimum}
+            />
+          </details>
+        </section>
+      ) : null}
 
       {results.isComplete && results.conditions && results.overallRates ? (
         <section
@@ -426,11 +753,24 @@ export function SessionResults<TCondition extends string, TId extends string>({
         </section>
       ) : null}
 
+      {exportData ? (
+        <ExportPanel results={results} exportData={exportData} />
+      ) : null}
+
       <section
         aria-labelledby="results-reading"
         className="session-results__section"
       >
         <h2 id="results-reading">How to read these results</h2>
+        <ul className="session-results__key-points">
+          <li>This is an educational experiment, not a clinical assessment.</li>
+          <li>These results describe this one session, not a lasting trait.</li>
+          <li>Read speed and accuracy together.</li>
+          <li>
+            There is no comparison with other people: no norms exist for this
+            task.
+          </li>
+        </ul>
         <div className="session-results__explainers">
           <Card as="section">
             <h3>The three conditions</h3>
@@ -459,32 +799,60 @@ export function SessionResults<TCondition extends string, TId extends string>({
               a validated scientific threshold.
             </p>
           </Card>
-          <Card as="section">
-            <h3>Three different rates</h3>
-            <p>
-              <strong>Response accuracy</strong> is the share of key presses
-              that were correct. <strong>Successful response rate</strong> is
-              the share of all analysable trials, including timeouts, that ended
-              in a correct response. <strong>Timeout rate</strong> is the share
-              of analysable trials with no key press within 2 seconds. Invalid
-              trials are excluded from all three. Speed and accuracy are
-              reported separately and are not combined into a score.
-            </p>
-          </Card>
-          <Card as="section">
-            <h3>Limits of this measurement</h3>
-            <p>
-              Times are recorded by your browser and depend on your device,
-              display, keyboard, and system load; they are not laboratory-grade
-              measurements and are not directly comparable across devices. One
-              short session describes how this task went at this moment; it does
-              not establish a stable personal trait. This task does not measure
-              intelligence, diagnose any condition, or compare you with other
-              people.
-              {copy.extraLimitations ? ` ${copy.extraLimitations}` : null}
-            </p>
-          </Card>
         </div>
+        <details className="session-results__details">
+          <summary>More about these numbers and their limits</summary>
+          <div className="session-results__explainers">
+            <Card as="section">
+              <h3>Three different rates</h3>
+              <p>
+                <strong>Response accuracy</strong> is the share of key presses
+                that were correct. <strong>Successful response rate</strong> is
+                the share of all analysable trials, including timeouts, that
+                ended in a correct response. <strong>Timeout rate</strong> is
+                the share of analysable trials with no key press within 2
+                seconds. Invalid trials are excluded from all three. Speed and
+                accuracy are reported separately and are not combined into a
+                score.
+              </p>
+            </Card>
+            <Card as="section">
+              <h3>Why the median, and what it leaves out</h3>
+              <p>
+                Response times are usually skewed: most are close together, with
+                a few much slower ones. The median is a useful summary because
+                those few do not pull it far, but it is only one number. The
+                dots show the whole spread, which can differ between conditions
+                even when medians are similar. With few correct responses, or
+                different numbers in two conditions, a median can also shift by
+                chance, so a difference between medians is a description, not
+                proof of an effect.
+              </p>
+            </Card>
+            <Card as="section">
+              <h3>Few trials, noisy estimates</h3>
+              <p>
+                Each condition has at most 20 main trials. Responses vary from
+                trial to trial, so repeating the task could give noticeably
+                different numbers. That is normal and is why one session cannot
+                describe a person's stable characteristics.
+              </p>
+            </Card>
+            <Card as="section">
+              <h3>Limits of this measurement</h3>
+              <p>
+                Times are recorded by your browser and depend on your device,
+                display, keyboard, and system load; they are not
+                laboratory-grade measurements and are not directly comparable
+                across devices. One short session describes how this task went
+                at this moment; it does not establish a stable personal trait.
+                This task does not measure intelligence, diagnose any condition,
+                or compare you with other people.
+                {copy.extraLimitations ? ` ${copy.extraLimitations}` : null}
+              </p>
+            </Card>
+          </div>
+        </details>
       </section>
     </div>
   );

@@ -8,6 +8,7 @@ import type {
   InvalidReason,
   RateContrastValue,
   RtContrastValue,
+  SpeedAccuracyDetail,
 } from "./sessionAnalysis";
 
 export const MINUS = "−";
@@ -86,4 +87,37 @@ export function describeRateContrastWith<TCondition extends string>(
     return `In this session, ${measure} was the same on ${first} and ${second} trials.`;
   }
   return `In this session, ${measure} was ${Math.abs(points).toFixed(1)} percentage points ${points > 0 ? "higher" : "lower"} on ${first} than on ${second} trials.`;
+}
+
+/** Shown with every speed–accuracy sentence. */
+export const SPEED_ACCURACY_CAVEAT =
+  "This describes a small number of trials from one session. It is not a stable characteristic, an ability measure, or an assessment.";
+
+/**
+ * Plain-language speed–accuracy sentence for one contrast, from the
+ * RT-first condition's point of view; null when it cannot be described.
+ */
+export function describeSpeedAccuracyWith<TCondition extends string>(
+  contrast: ContrastDefinition<TCondition>,
+  detail: SpeedAccuracyDetail,
+  conditionLabel: Record<TCondition, string>,
+): string | null {
+  if (detail.pattern === "unavailable") return null;
+  const first = conditionLabel[contrast.rtFirst].toLowerCase();
+  const second = conditionLabel[contrast.rtSecond].toLowerCase();
+  if (detail.pattern === "indeterminate") {
+    const same =
+      detail.speed === 0 && detail.accuracy === 0
+        ? "median response time and response accuracy were the same"
+        : detail.speed === 0
+          ? "median response time was the same"
+          : "response accuracy was the same";
+    return `In this session, ${same} on ${first} and ${second} trials, so no speed–accuracy pattern can be described.`;
+  }
+  const speed = detail.speed === 1 ? "slower" : "faster";
+  const accuracy = detail.accuracy === 1 ? "more accurate" : "less accurate";
+  if (detail.pattern === "consistent") {
+    return `In this session, ${first} trials were both ${speed} and ${accuracy} than ${second} trials: speed and accuracy pointed the same way.`;
+  }
+  return `In this session, ${first} trials were ${speed} but ${accuracy} than ${second} trials: speed and accuracy moved in opposite directions, so neither one alone describes the difference.`;
 }

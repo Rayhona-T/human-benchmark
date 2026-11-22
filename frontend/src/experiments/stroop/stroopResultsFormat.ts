@@ -9,7 +9,8 @@ import {
   type ResultsCopy,
 } from "../shared/resultsFormat";
 import type { InvalidReason } from "../shared/sessionAnalysis";
-import type { StroopCondition } from "./stroop";
+import type { ExportColumn } from "../shared/exportTrials";
+import type { StroopCondition, StroopStimulus } from "./stroop";
 import {
   RT_DISPLAY_MINIMUM_CORRECT,
   type ContrastId,
@@ -83,3 +84,19 @@ export function describeRateContrast(
 ): string {
   return describeRateContrastWith(contrast, measure, value, CONDITION_LABEL);
 }
+
+/** Stroop stimulus columns for the participant-initiated CSV export. */
+export const STROOP_EXPORT_COLUMNS: readonly ExportColumn<StroopStimulus>[] = [
+  {
+    name: "stimulus_word",
+    description:
+      "Word shown: RED, BLUE, GREEN, or YELLOW, or a neutral word (BOOK, CHAIR, HOUSE, TABLE, MUSIC).",
+    value: (record) => record.stimulus.word,
+  },
+  {
+    name: "stimulus_ink",
+    description:
+      "Ink color of the word, which is what the response should match.",
+    value: (record) => record.stimulus.inkColor,
+  },
+];

@@ -1,5 +1,10 @@
+import type { ExportColumn } from "../shared/exportTrials";
 import type { ResultsCopy } from "../shared/resultsFormat";
-import { FLANKER_SYMBOLS, type FlankerCondition } from "./flanker";
+import {
+  FLANKER_SYMBOLS,
+  type FlankerCondition,
+  type FlankerStimulus,
+} from "./flanker";
 import type { FlankerContrastId } from "./flankerAnalysis";
 
 const L = FLANKER_SYMBOLS.left;
@@ -40,3 +45,24 @@ export const FLANKER_RESULTS_COPY: ResultsCopy<
   extraLimitations:
     "The arrows have a fixed size in screen pixels, so how large they look depends on your screen and viewing distance, and the spacing between arrows affects the size of the effect. Trials were shuffled in balanced sets, but how often each condition followed each other condition was not controlled, so effects of the previous trial can contribute to these results.",
 };
+
+/** Flanker stimulus columns for the participant-initiated CSV export. */
+export const FLANKER_EXPORT_COLUMNS: readonly ExportColumn<FlankerStimulus>[] =
+  [
+    {
+      name: "stimulus_symbols",
+      description: "The five symbols shown; the center one is the target.",
+      value: (record) => record.stimulus.text,
+    },
+    {
+      name: "target_direction",
+      description: "Direction of the center arrow (left or right).",
+      value: (record) => record.stimulus.targetDirection,
+    },
+    {
+      name: "flanker_direction",
+      description:
+        "What the four surrounding symbols indicate: left, right, or neutral (dashes).",
+      value: (record) => record.stimulus.flankerType,
+    },
+  ];

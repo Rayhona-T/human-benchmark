@@ -19,6 +19,14 @@ export type InvalidReason = Extract<
   { category: "invalid" }
 >["reason"];
 
+/**
+ * Analysis definitions version. 1.0: Cycle 5/6 metrics and contrasts.
+ * 1.1 (Cycle 7): adds missing-RT disclosure, an RT distribution summary, a
+ * trial series, and corrects the "not presented" count for unattributable
+ * records. No 1.0 value changes for engine-produced sessions.
+ */
+export const ANALYSIS_VERSION = "HB-ANALYSIS-1.1";
+
 export type Unavailable<TReason extends string> = {
   available: false;
   reason: TReason;
@@ -30,6 +38,23 @@ export type RateValue =
 
 export type MedianValue =
   | { available: true; valueMs: number; count: number }
+  | Unavailable<"below_display_minimum" | "no_correct_responses">;
+
+/**
+ * Descriptive spread of correct-response RTs: minimum, quartiles (linear
+ * interpolation, Hyndman & Fan type 7), and maximum. Same eligibility as the
+ * median (display rule), so it is never derived from fewer observations.
+ */
+export type RtDistribution =
+  | {
+      available: true;
+      count: number;
+      minMs: number;
+      q1Ms: number;
+      medianMs: number;
+      q3Ms: number;
+      maxMs: number;
+    }
   | Unavailable<"below_display_minimum" | "no_correct_responses">;
 
 export interface OutcomeCounts {
@@ -58,6 +83,13 @@ export interface ConditionResult<TCondition extends string = string> {
   medianCorrectRt: MedianValue;
   /** Number of correct responses with a usable RT (median input size). */
   correctRtCount: number;
+  /**
+   * Correct responses whose RT is missing or not a finite, non-negative
+   * number. They count as correct for every rate but cannot enter RT
+   * summaries; disclosed rather than silently dropped.
+   */
+  correctMissingRt: number;
+  correctRtDistribution: RtDistribution;
 }
 
 export type RtContrastValue =
@@ -102,10 +134,21 @@ export interface ContrastResult<
   successfulResponseRate: RateContrastValue;
 }
 
+/** One main trial, in presentation order, for trial-level description. */
+export interface TrialPoint<TCondition extends string = string> {
+  trialIndex: number;
+  condition: TCondition;
+  outcome: TrialOutcome["category"];
+  /** RT for correct and incorrect responses with a usable value; else null. */
+  reactionTimeMs: number | null;
+  invalidReason: InvalidReason | null;
+}
+
 export interface SessionResults<
   TCondition extends string = string,
   TId extends string = string,
 > {
+  analysisVersion: string;
   status: SessionRecordStatus;
   isComplete: boolean;
   plannedMainTrials: number;
@@ -126,6 +169,13 @@ export interface SessionResults<
   breakDurationMs: number | null;
   /** Records that could not be attributed to a known condition/phase. */
   unrecognizedRecords: number;
+  /** Correct main responses without a usable RT, across conditions. */
+  correctMissingRt: number;
+  /**
+   * Main trials in presentation order (complete sessions only; incomplete
+   * sessions show counts only, per both protocols §7).
+   */
+  trialSeries: readonly TrialPoint<TCondition>[] | null;
 }
 
 export interface SessionResultsInput {
@@ -184,6 +234,47 @@ export function median(values: readonly number[]): number | null {
     ? sorted[middle]
     : (sorted[middle - 1] + sorted[middle]) / 2;
 }
+
+/**
+ * Sample quantile of ascending-sorted values by linear interpolation
+ * (Hyndman & Fan 1996, type 7; the default in R, NumPy, and spreadsheet
+ * QUARTILE.INC): h = (n − 1)p, interpolating between neighbors.
+ */
+export function quantileSorted(
+  sorted: readonly number[],
+  p: number,
+): number | null {
+  if (sorted.length === 0 || !(p >= 0 && p <= 1)) return null;
+  const h = (sorted.length - 1) * p;
+  const lower = Math.floor(h);
+  const upper = Math.ceil(h);
+  return sorted[lower] + (h - lower) * (sorted[upper] - sorted[lower]);
+}
+
+function rtDistribution(
+  rts: readonly number[],
+  minimumCorrect: number,
+): RtDistribution {
+  if (rts.length === 0) {
+    return { available: false, reason: "no_correct_responses" };
+  }
+  if (rts.length < minimumCorrect) {
+    return { available: false, reason: "below_display_minimum" };
+  }
+  const sorted = [...rts].sort((a, b) => a - b);
+  return {
+    available: true,
+    count: sorted.length,
+    minMs: sorted[0],
+    q1Ms: quantileSorted(sorted, 0.25) as number,
+    medianMs: quantileSorted(sorted, 0.5) as number,
+    q3Ms: quantileSorted(sorted, 0.75) as number,
+    maxMs: sorted[sorted.length - 1],
+  };
+}
+
+const usableRt = (value: number | null): value is number =>
+  value !== null && Number.isFinite(value) && value >= 0;
 
 function emptyCounts(): OutcomeCounts {
   return {
@@ -271,9 +362,14 @@ export function computeSessionResults<
   const correctRts = new Map<TCondition, number[]>(
     definition.conditions.map((condition) => [condition, []]),
   );
+  const correctMissing = new Map<TCondition, number>(
+    definition.conditions.map((condition) => [condition, 0]),
+  );
   const invalidReasons: Partial<Record<InvalidReason, number>> = {};
+  const trialSeries: TrialPoint<TCondition>[] = [];
   let practiceRecorded = 0;
   let unrecognizedRecords = 0;
+  let unrecognizedMainRecords = 0;
 
   for (const record of input.records) {
     if (record.phase === "practice") {
@@ -282,6 +378,9 @@ export function computeSessionResults<
     }
     if (record.phase !== "main" || !isKnownCondition(record.condition)) {
       unrecognizedRecords += 1;
+      // A main-phase record was presented even if it cannot be attributed;
+      // it must not be reported as "not presented".
+      if (record.phase === "main") unrecognizedMainRecords += 1;
       continue;
     }
     const { outcome } = record;
@@ -292,17 +391,37 @@ export function computeSessionResults<
         (invalidReasons[outcome.reason] ?? 0) + 1;
     }
     const rt = record.timing.reactionTimeMs;
-    if (
-      outcome.category === "correct" &&
-      rt !== null &&
-      Number.isFinite(rt) &&
-      rt >= 0
-    ) {
-      correctRts.get(record.condition)?.push(rt);
+    if (outcome.category === "correct") {
+      if (usableRt(rt)) {
+        correctRts.get(record.condition)?.push(rt);
+      } else {
+        correctMissing.set(
+          record.condition,
+          (correctMissing.get(record.condition) ?? 0) + 1,
+        );
+      }
     }
+    trialSeries.push({
+      trialIndex: record.trialIndex,
+      condition: record.condition,
+      outcome: outcome.category,
+      reactionTimeMs:
+        (outcome.category === "correct" || outcome.category === "incorrect") &&
+        usableRt(rt)
+          ? rt
+          : null,
+      invalidReason: outcome.category === "invalid" ? outcome.reason : null,
+    });
   }
 
-  const unpresentedMain = Math.max(0, plannedMainTrials - main.recorded);
+  const unpresentedMain = Math.max(
+    0,
+    plannedMainTrials - main.recorded - unrecognizedMainRecords,
+  );
+  const correctMissingRt = [...correctMissing.values()].reduce(
+    (sum, count) => sum + count,
+    0,
+  );
 
   let conditions: ConditionResult<TCondition>[] | null = null;
   let contrasts: ContrastResult<TCondition, TId>[] | null = null;
@@ -316,6 +435,8 @@ export function computeSessionResults<
         rates: rateSet(counts),
         medianCorrectRt: medianCorrectRt(rts, minimumCorrectForMedian),
         correctRtCount: rts.length,
+        correctMissingRt: correctMissing.get(condition) ?? 0,
+        correctRtDistribution: rtDistribution(rts, minimumCorrectForMedian),
       };
     });
     conditions = computed;
@@ -341,6 +462,7 @@ export function computeSessionResults<
   }
 
   return {
+    analysisVersion: ANALYSIS_VERSION,
     status: input.status,
     isComplete,
     plannedMainTrials,
@@ -356,5 +478,79 @@ export function computeSessionResults<
     breakTaken: input.breakTaken,
     breakDurationMs: input.breakDurationMs,
     unrecognizedRecords,
+    correctMissingRt,
+    trialSeries: isComplete ? trialSeries : null,
   };
+}
+
+/**
+ * Descriptive speed–accuracy pattern for one contrast, from the perspective
+ * of its RT-first condition (Heitz 2014: speed and accuracy can trade off).
+ *
+ * - "consistent": that condition was slower and less accurate, or faster and
+ *   more accurate.
+ * - "tradeoff": slower but more accurate, or faster but less accurate.
+ * - "indeterminate": no RT or no accuracy difference (to the displayed
+ *   precision: 1 ms, 0.1 percentage points).
+ * - "unavailable": either the RT or the accuracy contrast is unavailable.
+ *
+ * Purely descriptive: with at most 20 trials per condition, either pattern
+ * can arise from trial-to-trial variation. No threshold or test is applied.
+ */
+export type SpeedAccuracyPattern =
+  "consistent" | "tradeoff" | "indeterminate" | "unavailable";
+
+/** Direction details behind a speed–accuracy pattern (RT-first condition's view). */
+export interface SpeedAccuracyDetail {
+  pattern: SpeedAccuracyPattern;
+  /** +1 slower, −1 faster, 0 same (to 1 ms); null when unavailable. */
+  speed: 1 | -1 | 0 | null;
+  /** +1 more accurate, −1 less accurate, 0 same (to 0.1 points); null when unavailable. */
+  accuracy: 1 | -1 | 0 | null;
+}
+
+export function speedAccuracyDetail<TCondition extends string>(
+  contrast: ContrastResult<TCondition>,
+): SpeedAccuracyDetail {
+  const unavailable: SpeedAccuracyDetail = {
+    pattern: "unavailable",
+    speed: null,
+    accuracy: null,
+  };
+  const rt = contrast.reactionTime;
+  const accuracy = contrast.responseAccuracy;
+  if (!rt.available || !accuracy.available) return unavailable;
+  // Accuracy of the RT-first condition minus the RT-second condition,
+  // whichever operand order the protocol uses for rates.
+  let firstMinusSecond: number;
+  if (
+    contrast.rateFirst === contrast.rtFirst &&
+    contrast.rateSecond === contrast.rtSecond
+  ) {
+    firstMinusSecond = accuracy.value;
+  } else if (
+    contrast.rateFirst === contrast.rtSecond &&
+    contrast.rateSecond === contrast.rtFirst
+  ) {
+    firstMinusSecond = -accuracy.value;
+  } else {
+    return unavailable;
+  }
+  const rtMs = Math.round(rt.valueMs);
+  const accuracyPoints = Math.round(firstMinusSecond * 1000) / 10;
+  const speed = rtMs > 0 ? 1 : rtMs < 0 ? -1 : 0;
+  const moreAccurate = accuracyPoints > 0 ? 1 : accuracyPoints < 0 ? -1 : 0;
+  const pattern: SpeedAccuracyPattern =
+    speed === 0 || moreAccurate === 0
+      ? "indeterminate"
+      : (speed === 1) === (moreAccurate === 1)
+        ? "tradeoff"
+        : "consistent";
+  return { pattern, speed, accuracy: moreAccurate };
+}
+
+export function speedAccuracyPattern<TCondition extends string>(
+  contrast: ContrastResult<TCondition>,
+): SpeedAccuracyPattern {
+  return speedAccuracyDetail(contrast).pattern;
 }
