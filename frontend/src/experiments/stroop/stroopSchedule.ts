@@ -9,35 +9,29 @@ import {
   type StroopTrial,
   type StroopWord,
 } from "./stroop";
+import {
+  fisherYates,
+  isUint32Seed,
+  mulberry32,
+  type RandomSource,
+} from "../shared/seededRandom";
 
-interface Mulberry32 {
-  (): number;
-}
+// The shared implementation is re-exported so Stroop's public API is unchanged.
+export { fisherYates };
 
 export function validateSeed(seed: number): number {
-  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
+  if (!isUint32Seed(seed)) {
     throw new Error("Stroop seed must be an unsigned 32-bit integer.");
   }
   return seed >>> 0;
 }
 
 /**
- * Mulberry32 exactly as specified in HB-STROOP-1.0 §8:
- *   t = state = (state + 0x6D2B79F5) mod 2^32
- *   t = imul(t XOR (t >>> 15), t OR 1) mod 2^32
- *   t = t XOR ((t + imul(t XOR (t >>> 7), t OR 61)) mod 2^32)
- *   return unsigned (t XOR (t >>> 14)) / 2^32
+ * Mulberry32 exactly as specified in HB-STROOP-1.0 §8 (shared implementation
+ * in `../shared/seededRandom`; Stroop keeps its own seed validation message).
  */
-export function createMulberry32(seed: number): Mulberry32 {
-  let state = validateSeed(seed);
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1) >>> 0;
-    t = (t ^ ((t + Math.imul(t ^ (t >>> 7), t | 61)) >>> 0)) >>> 0;
-    t = (t ^ (t >>> 14)) >>> 0;
-    return t / 0x100000000;
-  };
+export function createMulberry32(seed: number): RandomSource {
+  return mulberry32(validateSeed(seed));
 }
 
 export function enumerateDerangements(): readonly (readonly number[])[] {
@@ -58,15 +52,6 @@ export function enumerateDerangements(): readonly (readonly number[])[] {
     }
   }
   return result;
-}
-
-export function fisherYates<T>(items: readonly T[], random: Mulberry32): T[] {
-  const copy = [...items];
-  for (let index = copy.length - 1; index > 0; index--) {
-    const chosen = Math.floor(random() * (index + 1));
-    [copy[index], copy[chosen]] = [copy[chosen], copy[index]];
-  }
-  return copy;
 }
 
 export function getCorrectKey(color: StroopColor): "d" | "f" | "j" | "k" {

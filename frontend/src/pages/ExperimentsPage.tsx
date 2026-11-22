@@ -13,9 +13,8 @@ export function ExperimentsPage() {
         <p className="page-eyebrow">Experiment catalogue</p>
         <h1>Experiments</h1>
         <p className="page-intro">
-          The initial catalogue includes Stroop, which is available for
-          participation. Flanker remains part of the future implementation
-          cycle.
+          The initial catalogue includes the Stroop and Flanker tasks. Both are
+          educational, browser-based adaptations of classic experiments.
         </p>
       </header>
 
@@ -49,16 +48,18 @@ export function ExperimentsPage() {
               <p className="page-card-label">Arrow array task</p>
               <h2>Flanker Effect</h2>
             </div>
-            <Badge tone="warning">Upcoming</Badge>
+            <Badge tone="success">Available for practice</Badge>
           </div>
           <p>
             Explore how responses to a central arrow may vary with surrounding
             congruent, incongruent, or neutral symbols.
           </p>
           <p className="experiment-card__status">
-            Scientific protocol is awaiting human review. Experiment
-            implementation is not started.
+            Protocol approved. Participant experience available.
           </p>
+          <Link className="experiment-card__action" to="/experiments/flanker">
+            Start Flanker
+          </Link>
         </Card>
       </section>
 

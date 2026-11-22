@@ -1,8 +1,8 @@
-# Flanker Experiment — Protocol Draft
+# Flanker Experiment — Approved Protocol
 
-**Protocol ID:** `HB-FLANKER-1.0-draft`
+**Protocol ID:** `HB-FLANKER-1.0`
 
-**Status:** Cycle 2 Task 3 complete, awaiting human review. Research-informed; not scientifically approved or validated.
+**Status:** Approved by the project owner in Cycle 6 (decisions in §14). Written in Cycle 2 Task 3 and reviewed against the literature in Cycle 6 Task 1+2 ([FLANKER_EVIDENCE_REVIEW.md](../scientific/FLANKER_EVIDENCE_REVIEW.md)); no parameter was changed. Approval does not mean scientific or clinical validation: the protocol is research-informed, not validated.
 
 ## 1. Purpose and Evidence Status
 
@@ -190,6 +190,7 @@ A positive RT contrast means the first RT condition is slower. In particular, po
 - The dash baseline is not perceptually matched to arrows and can affect neutral-relative contrasts. Spatial arrangement, distance, visual angle, font fallback, display scaling, and target visibility matter [F1–F3].
 - A fixed F/J mapping creates hand, key-layout, and motor influences. Keyboard accessibility needs may make the task unusable or non-comparable for some participants.
 - Practice, repetition, sequence regularity, fatigue, and strategy may change responses; practice/main separation and randomized order do not remove all such effects.
+- Condition-to-condition transition frequencies are not controlled by the balancing sets, so sequential (previous-trial) effects [F5, F7] may contribute to session means. This is disclosed to participants with their results (approved decision §14.4).
 - Sixty trials (20 per condition) are a deliberately short educational session. Errors, timeouts, and invalid trials reduce usable counts. The schedule provides descriptive observations, not demonstrated statistical power, validated measurement, or stable individual estimates.
 - Robust group-level task effects do not imply reliable individual differences; test-retest reliability concerns have been documented for classic cognitive tasks including Flanker [S7].
 - RT and accuracy can trade off. Display them separately with counts and timeouts; do not present faster RT as unqualified better performance [S5].
@@ -197,6 +198,8 @@ A positive RT contrast means the first RT condition is slower. In particular, po
 - Present results as educational, session-specific descriptions only. No diagnosis, IQ inference, intelligence ranking, personality claim, or stable-trait conclusion is permitted.
 
 ## 12. Remaining Questions for Human Review
+
+The first three questions below (neutral baseline, geometry/mapping, balancing sets) were resolved by the Cycle 6 decisions in §14. The remaining items stay open for any future release scope or research use.
 
 - Is the em-dash neutral baseline acceptable, given its visual differences from arrow flankers, or should a different explicitly justified neutral be evaluated?
 - Are the five-cell geometry, font/glyph fallback, CSS dimensions, and fixed F/J mapping suitable for the intended MVP and supported devices?
@@ -233,3 +236,17 @@ Bibliographic details and DOI links below were checked in the approved Cycle 2 l
 **[P2]** MDN Web Docs. (n.d.). *Performance.now()*. Mozilla Developer Network. Browser API behavior reference; not empirical timing validation. [https://developer.mozilla.org/en-US/docs/Web/API/Performance/now](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now)
 
 **[P3]** MDN Web Docs. (n.d.). *Page Visibility API*. Mozilla Developer Network. Browser API behavior reference; not empirical timing validation. [https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API)
+
+**[F5]–[F9]** Cycle 6 additions (sequential effects, spacing, online replication, broad-population use) are listed with their verification status in [FLANKER_EVIDENCE_REVIEW.md](../scientific/FLANKER_EVIDENCE_REVIEW.md).
+
+## 14. Cycle 6 Approved Decisions
+
+The project owner approved the following in Cycle 6. No parameter in §1–§11 changed.
+
+1. **Approval.** This protocol is approved as `HB-FLANKER-1.0` (formerly `HB-FLANKER-1.0-draft`).
+2. **Em-dash neutral baseline** (§4) is retained, with the §4 caveat. Non-directional line flankers are an established neutral in the Attention Network Test [F4].
+3. **Geometry and F/J mapping** (§4–§5) are retained, with the visual-angle limitation in §11.
+4. **Concealed six-item balancing sets** (§8) are retained. Uncontrolled condition transitions must be disclosed (added to §11 and to the participant results).
+5. **Base item order** for `HB-FLANKER-shuffle-v1` is ratified as listed in §8.3: `congruent-left, congruent-right, incongruent-left, incongruent-right, neutral-left, neutral-right`.
+6. **Mapping check** (§5): only a wrong mapped key shows the correct mapping and repeats the prompt; unmapped and auto-repeated keys are ignored.
+7. **Narrow viewport protection** (§4) is required: no timed trial starts, and no record is created, unless the full 272 px array is visible; the participant is told why and can resume once it fits.

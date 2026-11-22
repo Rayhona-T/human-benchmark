@@ -1,5 +1,8 @@
 # HUMAN BENCHMARK — Stroop Participant UI
 
+Since Cycle 6 the session flow and page chrome described here are shared with
+Flanker (`EXPERIMENT_SESSION_ARCHITECTURE.md`). Stroop behavior is unchanged.
+
 ## Participant flow
 
 1. Introduction using the protocol §3 participant text: purpose, key

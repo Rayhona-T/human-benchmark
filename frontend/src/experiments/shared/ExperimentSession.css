@@ -1,0 +1,164 @@
+/* Shared experiment session chrome (extracted from the Cycle 5 Stroop page;
+   values unchanged). Experiment-specific stimuli keep their own styles. */
+
+.experiment-page {
+  min-height: calc(100vh - 138px);
+  position: relative;
+}
+
+.experiment-card,
+.experiment-centered-card {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.experiment-intro__summary {
+  max-width: 620px;
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+}
+
+.experiment-intro__subheading {
+  margin-top: var(--space-6);
+  font-size: var(--text-lg);
+}
+
+.experiment-intro__list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  color: var(--text-secondary);
+}
+
+.experiment-intro__list li + li {
+  margin-top: var(--space-2);
+}
+
+.experiment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.experiment-session-bar {
+  width: 100%;
+  min-height: 44px;
+  margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.experiment-session-bar__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.experiment-progress {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.experiment-trial-stage {
+  /* Background is applied inline from each protocol's stimulus definition. */
+  min-height: 520px;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  position: relative;
+}
+
+.experiment-trial-stage > .badge {
+  position: absolute;
+  top: var(--space-4);
+}
+
+.experiment-fixation {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  line-height: 1;
+  /* Pragmatic choice: neither protocol specifies a fixation color. */
+  color: #f9fafb;
+  user-select: none;
+}
+
+.experiment-feedback {
+  max-width: 420px;
+  text-align: center;
+}
+
+.experiment-feedback h2 {
+  margin-bottom: var(--space-2);
+}
+
+.experiment-feedback p {
+  margin-bottom: 0;
+  color: var(--text-secondary);
+}
+
+.experiment-centered-card {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.experiment-centered-card > .badge {
+  align-self: flex-start;
+}
+
+.experiment-home-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-accent-700);
+  font-weight: var(--font-weight-semibold);
+  text-underline-offset: 3px;
+}
+
+.experiment-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(11 16 32 / 0.52);
+}
+
+.experiment-confirm-backdrop .card {
+  width: min(460px, 100%);
+}
+
+@media (max-width: 720px) {
+  .experiment-page {
+    min-height: calc(100vh - 160px);
+  }
+
+  .experiment-session-bar {
+    align-items: flex-start;
+  }
+
+  .experiment-session-bar__actions {
+    flex-shrink: 0;
+  }
+
+  .experiment-trial-stage {
+    min-height: 420px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experiment-fixation {
+    animation: none;
+  }
+}

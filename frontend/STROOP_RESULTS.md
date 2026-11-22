@@ -18,9 +18,14 @@ Fields used: `phase`, `condition`, `outcome` (category and invalid reason),
 
 ## Code layout
 
-- `stroopAnalysis.ts` — pure calculations (`computeStroopResults`), no React.
-- `stroopResultsFormat.ts` — number formatting and plain-language sentences.
-- `StroopResults.tsx` / `StroopResults.css` — presentation.
+Since Cycle 6 the calculations and presentation are shared with Flanker
+(`EXPERIMENT_SESSION_ARCHITECTURE.md`). Behavior and wording are unchanged.
+
+- `stroopAnalysis.ts` — Stroop's protocol §10 contrast table and configuration
+  for the shared `computeSessionResults` (`../shared/sessionAnalysis.ts`).
+- `stroopResultsFormat.ts` — Stroop wording (`STROOP_RESULTS_COPY`) for the
+  shared formatting in `../shared/resultsFormat.ts`.
+- `StroopResults.tsx` — renders the shared `SessionResults` with Stroop wording.
 - `StroopExperimentPage.tsx` — renders results under the end-of-session card.
 
 ## Calculations (main trials only; practice is counted but never analysed)

@@ -141,3 +141,16 @@ is available at `/experiments/stroop`.
 
 Session results (calculations, eligibility rules, and participant-facing
 presentation) are documented in `STROOP_RESULTS.md`.
+
+## Flanker adapter
+
+The approved Flanker protocol (`HB-FLANKER-1.0`) is implemented under
+`src/experiments/flanker/` and available at `/experiments/flanker`. The adapter
+is documented in `FLANKER_ADAPTER.md` and the participant experience in
+`FLANKER_PARTICIPANT_UI.md`.
+
+## Shared experiment architecture
+
+Stroop and Flanker share the session flow, analysis, results presentation,
+session shell, and deterministic randomization in `src/experiments/shared/`,
+documented in `EXPERIMENT_SESSION_ARCHITECTURE.md`.

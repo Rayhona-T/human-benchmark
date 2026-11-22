@@ -84,7 +84,9 @@ error rather than relaxing constraints or silently substituting an order.
 ## Pseudorandom number generator
 
 All randomization uses Mulberry32 exactly as specified in HB-STROOP-1.0 §8
-(`createMulberry32` in `stroopSchedule.ts`):
+(`createMulberry32` in `stroopSchedule.ts`, which since Cycle 6 delegates to the
+shared implementation in `src/experiments/shared/seededRandom.ts` with unchanged
+behavior):
 
 ```text
 t = state = (state + 0x6D2B79F5) mod 2^32

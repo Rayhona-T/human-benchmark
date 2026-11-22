@@ -6,6 +6,7 @@ import { DesignSystemPage } from "../pages/DesignSystemPage";
 import { ExperimentsPage } from "../pages/ExperimentsPage";
 import { MethodologyPage } from "../pages/MethodologyPage";
 import { StroopExperimentPage } from "../experiments/stroop/StroopExperimentPage";
+import { FlankerExperimentPage } from "../experiments/flanker/FlankerExperimentPage";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
       { path: "experiments", element: <ExperimentsPage /> },
       { path: "methodology", element: <MethodologyPage /> },
       { path: "experiments/stroop", element: <StroopExperimentPage /> },
+      { path: "experiments/flanker", element: <FlankerExperimentPage /> },
       { path: "design-system", element: <DesignSystemPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],

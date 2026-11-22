@@ -18,7 +18,7 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 2 — Scientific Protocol & Literature | Complete |
 | Cycle 2 — Task 1: Literature & Evidence Review | Approved |
 | Cycle 2 — Task 2: Stroop Scientific Protocol | Approved |
-| Cycle 2 — Task 3: Flanker Scientific Protocol | Approved |
+| Cycle 2 — Task 3: Flanker Scientific Protocol | Drafted in Cycle 2; formally approved as `HB-FLANKER-1.0` in Cycle 6 (protocol §14) |
 | Cycle 2 — Task 4: Scientific Harmonization & Approval | Approved |
 | Cycle 3 — Frontend Foundation | Complete |
 | Cycle 3 — Task 1: Frontend Architecture & Foundation | Approved |
@@ -30,12 +30,14 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 4 — Task 2: Session & Trial Lifecycle | Approved |
 | Cycle 4 — Task 3: Timing, Input & Validity | Approved |
 | Cycle 4 — Task 4: Integration, Testing & Engine Approval | Approved |
-| Cycle 5 — Stroop Implementation | In progress — Tasks 1–3 approved; Task 4 final audit complete, awaiting human approval |
+| Cycle 5 — Stroop Implementation | Approved |
 | Cycle 5 — Task 1: Stroop Adapter & Experiment Configuration | Approved (PRNG protocol-conformance correction approved) |
 | Cycle 5 — Task 2: Stroop Practice & Main Presentation | Approved (after verification audit) |
 | Cycle 5 — Task 3: Stroop Session Results & Data Interpretation | Approved |
-| Cycle 5 — Task 4: Stroop Integration, Scientific Audit & Approval | Audit complete — awaiting human approval |
-| Cycle 6 — Flanker Implementation | Planned — not started |
+| Cycle 5 — Task 4: Stroop Integration, Scientific Audit & Approval | Approved |
+| Cycle 6 — Flanker Implementation | In progress — Tasks 1+2 approved; Tasks 3+4 complete, awaiting human approval |
+| Cycle 6 — Task 1+2: Flanker Scientific Protocol, Architecture & Engine Integration | Approved (protocol approved as `HB-FLANKER-1.0`; decisions in protocol §14) |
+| Cycle 6 — Task 3+4: Flanker Participant Experience, Final Audit & Approval Readiness | Complete — awaiting human approval |
 | Cycle 7 — Analysis & Results | Planned — not started |
 | Cycle 8 — Backend & Persistence | Planned — not started |
 | Cycle 9 — Personal Observatory | Planned — not started |

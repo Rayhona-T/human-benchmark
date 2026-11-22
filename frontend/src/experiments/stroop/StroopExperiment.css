@@ -1,43 +1,5 @@
-.stroop-page {
-  min-height: calc(100vh - 138px);
-  position: relative;
-}
-
-.stroop-intro,
-.stroop-instructions,
-.stroop-centered-card {
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.stroop-intro__summary {
-  max-width: 620px;
-  font-size: var(--text-lg);
-  line-height: var(--leading-relaxed);
-}
-
-.stroop-intro__subheading {
-  margin-top: var(--space-6);
-  font-size: var(--text-lg);
-}
-
-.stroop-intro__list {
-  margin: var(--space-2) 0 0;
-  padding-left: var(--space-5);
-  color: var(--text-secondary);
-}
-
-.stroop-intro__list li + li {
-  margin-top: var(--space-2);
-}
-
-.stroop-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
+/* Stroop-specific styles. Shared session chrome is in
+   ../shared/ExperimentSession.css. */
 
 .stroop-key-legend {
   display: grid;
@@ -100,57 +62,6 @@
   margin-top: var(--space-4);
 }
 
-.stroop-session-bar {
-  width: 100%;
-  min-height: 44px;
-  margin-bottom: var(--space-6);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  border-bottom: 1px solid var(--border-default);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
-.stroop-session-bar__actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.stroop-progress {
-  font-family: var(--font-mono);
-  font-weight: var(--font-weight-semibold);
-}
-
-.stroop-trial-stage {
-  /* Background color is applied inline from the protocol stimulus definition
-     (HB-STROOP-1.0: #111827). */
-  min-height: 520px;
-  padding: var(--space-6) var(--space-4);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-6);
-  position: relative;
-}
-
-.stroop-trial-stage > .badge {
-  position: absolute;
-  top: var(--space-4);
-}
-
-.stroop-fixation {
-  font-family: var(--font-mono);
-  font-size: 52px;
-  line-height: 1;
-  /* Pragmatic choice: the protocol does not specify a fixation color. */
-  color: #f9fafb;
-  user-select: none;
-}
-
 .stroop-stimulus {
   max-width: 100%;
   text-align: center;
@@ -159,89 +70,19 @@
   white-space: nowrap;
 }
 
-.stroop-trial-stage .stroop-key-legend {
+.experiment-trial-stage .stroop-key-legend {
   width: min(560px, 100%);
   margin: 0;
 }
 
-.stroop-feedback {
-  max-width: 420px;
-  text-align: center;
-}
-
-.stroop-feedback h2 {
-  margin-bottom: var(--space-2);
-}
-
-.stroop-feedback p {
-  margin-bottom: 0;
-  color: var(--text-secondary);
-}
-
-.stroop-iti {
-  width: 1px;
-  height: 1px;
-}
-
-.stroop-centered-card {
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.stroop-centered-card > .badge {
-  align-self: flex-start;
-}
-
-.stroop-home-link {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  color: var(--color-accent-700);
-  font-weight: var(--font-weight-semibold);
-  text-underline-offset: 3px;
-}
-
-.stroop-confirm-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-overlay);
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: rgb(11 16 32 / 0.52);
-}
-
-.stroop-confirm-backdrop .card {
-  width: min(460px, 100%);
-}
-
 @media (max-width: 720px) {
-  .stroop-page {
-    min-height: calc(100vh - 160px);
-  }
-
-  .stroop-session-bar {
-    align-items: flex-start;
-  }
-
-  .stroop-session-bar__actions {
-    flex-shrink: 0;
-  }
-
   .stroop-key-legend {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .stroop-trial-stage {
-    min-height: 420px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stroop-stimulus,
-  .stroop-fixation {
+  .stroop-stimulus {
     animation: none;
   }
 }
