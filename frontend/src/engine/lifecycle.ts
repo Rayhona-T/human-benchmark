@@ -411,7 +411,9 @@ export class ExperimentLifecycle<
     }
     this.state = this.resumePhase;
     this.phase = this.resumePhase;
-    this.activeTrial = null;
+    this.activeTrial = this.resumeActiveTrial
+      ? { ...this.resumeActiveTrial }
+      : null;
     this.resumePhase = null;
     this.resumeActiveTrial = null;
     return { ok: true };

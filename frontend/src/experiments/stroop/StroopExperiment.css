@@ -114,7 +114,11 @@
 }
 
 .stroop-trial-stage {
+  /* Background color is applied inline from the protocol stimulus definition
+     (HB-STROOP-1.0: #111827). */
   min-height: 520px;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -125,14 +129,15 @@
 
 .stroop-trial-stage > .badge {
   position: absolute;
-  top: 0;
+  top: var(--space-4);
 }
 
 .stroop-fixation {
   font-family: var(--font-mono);
   font-size: 52px;
   line-height: 1;
-  color: var(--text-primary);
+  /* Pragmatic choice: the protocol does not specify a fixation color. */
+  color: #f9fafb;
   user-select: none;
 }
 
@@ -217,10 +222,6 @@
 
   .stroop-trial-stage {
     min-height: 420px;
-  }
-
-  .stroop-stimulus {
-    font-size: clamp(36px, 12vw, 48px) !important;
   }
 }
 

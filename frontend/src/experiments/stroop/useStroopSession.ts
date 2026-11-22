@@ -1,8 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PracticeOrMain, TrialRecord } from "../../engine/contracts";
-import { ExperimentLifecycle } from "../../engine/lifecycle";
+import { flushSync } from "react-dom";
+import type {
+  PracticeOrMain,
+  TrialOutcome,
+  TrialRecord,
+} from "../../engine/contracts";
+import {
+  ExperimentLifecycle,
+  type LifecycleSnapshot,
+} from "../../engine/lifecycle";
 import { BrowserKeyboardInputSource } from "../../engine/input";
-import { BrowserInterruptionEventSource } from "../../engine/interruption";
+import {
+  BrowserInterruptionEventSource,
+  type InterruptionReason,
+} from "../../engine/interruption";
 import { TrialRuntime } from "../../engine/trialRuntime";
 import {
   BrowserDeadlineScheduler,
@@ -32,20 +43,27 @@ export type StroopScreen =
 export type StroopTrialStage =
   "idle" | "fixation" | "stimulus" | "feedback" | "iti";
 
+type StroopRecord = TrialRecord<unknown, string, StroopResponse>;
+
 export interface StroopSessionHook {
   screen: StroopScreen;
   trialStage: StroopTrialStage;
   activeTrial: StroopTrial | null;
-  feedback: TrialRecord<unknown, string, StroopResponse> | null;
+  feedback: StroopRecord | null;
   practiceIndex: number;
   mainIndex: number;
   pauseContext: PracticeOrMain | "break" | null;
-  interruptionReason:
-    "visibility_hidden" | "window_blur" | "document_focus_lost" | null;
+  interruptionReason: InterruptionReason | null;
+  /** True when the current pause invalidated an already-presented trial. */
+  pauseInvalidatedTrial: boolean;
+  /** Pause/exit are unavailable while a timed stimulus is on screen. */
+  canPause: boolean;
+  /** Read-only view of the engine state (records are copies). */
+  getSnapshot: () => LifecycleSnapshot<unknown, string, StroopResponse> | null;
   beginSession: (seed?: number) => void;
   beginPractice: () => void;
   beginMain: () => void;
-  pauseSession: () => void;
+  pauseSession: () => boolean;
   resumeSession: () => void;
   continueBreak: () => void;
   skipBreak: () => void;
@@ -67,23 +85,43 @@ function createSessionId(): string {
   return `stroop-${Date.now().toString(36)}`;
 }
 
+/** Protocol §7: a timed stimulus may start only while visible and focused. */
+function currentUnavailability(): InterruptionReason | null {
+  if (typeof document === "undefined") return null;
+  if (document.hidden) return "visibility_hidden";
+  if (!document.hasFocus()) return "document_focus_lost";
+  return null;
+}
+
+function interruptionReasonFromOutcome(
+  outcome: TrialOutcome,
+): InterruptionReason | null {
+  if (outcome.category !== "invalid") return null;
+  if (outcome.reason === "visibility_lost") return "visibility_hidden";
+  if (outcome.reason === "interrupt") return "window_blur";
+  if (outcome.reason === "focus_lost") return "document_focus_lost";
+  return null;
+}
+
+function phaseConfiguration(phase: PracticeOrMain) {
+  return phase === "practice"
+    ? STROOP_CONFIGURATION.practice
+    : STROOP_CONFIGURATION.main;
+}
+
 export function useStroopSession(seedOverride?: number): StroopSessionHook {
   const [screen, setScreen] = useState<StroopScreen>("intro");
-  const [trialStage, setTrialStage] = useState<StroopTrialStage>("idle");
+  const [trialStage, setTrialStageState] = useState<StroopTrialStage>("idle");
   const [activeTrial, setActiveTrial] = useState<StroopTrial | null>(null);
-  const [feedback, setFeedback] = useState<TrialRecord<
-    unknown,
-    string,
-    StroopResponse
-  > | null>(null);
+  const [feedback, setFeedback] = useState<StroopRecord | null>(null);
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [mainIndex, setMainIndex] = useState(0);
   const [pauseContext, setPauseContext] = useState<
     PracticeOrMain | "break" | null
   >(null);
-  const [interruptionReason, setInterruptionReason] = useState<
-    "visibility_hidden" | "window_blur" | "document_focus_lost" | null
-  >(null);
+  const [interruptionReason, setInterruptionReason] =
+    useState<InterruptionReason | null>(null);
+  const [pauseInvalidatedTrial, setPauseInvalidatedTrial] = useState(false);
 
   const lifecycleRef = useRef<ExperimentLifecycle<
     unknown,
@@ -96,36 +134,56 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
     string,
     StroopResponse
   > | null>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const activePhaseRef = useRef<PracticeOrMain | null>(null);
+  const trialStageRef = useRef<StroopTrialStage>("idle");
+  const fixationTimeoutRef = useRef<number | null>(null);
+  const onsetFrameRef = useRef<number | null>(null);
+  const offsetFrameRef = useRef<number | null>(null);
+  const itiTimeoutRef = useRef<number | null>(null);
+  const preOnsetGuardRef = useRef<(() => void) | null>(null);
   const breakStartRef = useRef<number | null>(null);
+  const breakOfferedRef = useRef(false);
+  const breakActionRef = useRef(false);
   const interruptionRef = useRef<BrowserInterruptionEventSource | null>(null);
-  const interruptionCleanupRef = useRef<(() => void) | null>(null);
+  const breakInterruptionCleanupRef = useRef<(() => void) | null>(null);
   const prepareNextTrialRef = useRef<(phase: PracticeOrMain) => void>(() => {});
   const sessionStartedRef = useRef(false);
-  const feedbackTimeoutRef = useRef<number | null>(null);
-  const itiTimeoutRef = useRef<number | null>(null);
-  const breakActionRef = useRef(false);
+
+  const setTrialStage = useCallback((stage: StroopTrialStage) => {
+    trialStageRef.current = stage;
+    setTrialStageState(stage);
+  }, []);
+
+  const interruptionSource = useCallback(() => {
+    if (!interruptionRef.current) {
+      interruptionRef.current = new BrowserInterruptionEventSource();
+    }
+    return interruptionRef.current;
+  }, []);
+
+  const stopPreOnsetGuard = useCallback(() => {
+    preOnsetGuardRef.current?.();
+    preOnsetGuardRef.current = null;
+  }, []);
 
   const clearTrialTimers = useCallback(() => {
-    if (timeoutRef.current !== null) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+    if (fixationTimeoutRef.current !== null) {
+      window.clearTimeout(fixationTimeoutRef.current);
+      fixationTimeoutRef.current = null;
     }
-    if (rafRef.current !== null) {
-      window.cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
+    if (onsetFrameRef.current !== null) {
+      window.cancelAnimationFrame(onsetFrameRef.current);
+      onsetFrameRef.current = null;
     }
-    if (feedbackTimeoutRef.current !== null) {
-      window.clearTimeout(feedbackTimeoutRef.current);
-      feedbackTimeoutRef.current = null;
+    if (offsetFrameRef.current !== null) {
+      window.cancelAnimationFrame(offsetFrameRef.current);
+      offsetFrameRef.current = null;
     }
     if (itiTimeoutRef.current !== null) {
       window.clearTimeout(itiTimeoutRef.current);
       itiTimeoutRef.current = null;
     }
-  }, []);
+    stopPreOnsetGuard();
+  }, [stopPreOnsetGuard]);
 
   const disposeRuntime = useCallback(() => {
     runtimeRef.current?.dispose();
@@ -133,183 +191,216 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
   }, []);
 
   const stopBreakInterruption = useCallback(() => {
-    interruptionCleanupRef.current?.();
-    interruptionCleanupRef.current = null;
+    breakInterruptionCleanupRef.current?.();
+    breakInterruptionCleanupRef.current = null;
   }, []);
+
+  /**
+   * Pauses a practice/main phase outside an active stimulus. The DOM update is
+   * flushed synchronously so a stimulus committed for a not-yet-recorded onset
+   * frame is removed before that frame paints.
+   */
+  const pauseOutsideStimulus = useCallback(
+    (phase: PracticeOrMain, reason: InterruptionReason | null) => {
+      clearTrialTimers();
+      disposeRuntime();
+      const lifecycle = lifecycleRef.current;
+      if (!lifecycle) return false;
+      const result = lifecycle.dispatch({ type: "PAUSE", resumePhase: phase });
+      if (!result.ok) return false;
+      flushSync(() => {
+        setInterruptionReason(reason);
+        setPauseInvalidatedTrial(false);
+        setPauseContext(phase);
+        setScreen("paused");
+        setTrialStage("idle");
+        setActiveTrial(null);
+        setFeedback(null);
+      });
+      return true;
+    },
+    [clearTrialTimers, disposeRuntime, setTrialStage],
+  );
+
+  const showCompleted = useCallback(() => {
+    setScreen("completed");
+    setTrialStage("idle");
+    setActiveTrial(null);
+  }, [setTrialStage]);
 
   const prepareNextTrial = useCallback(
     (phase: PracticeOrMain) => {
       const lifecycle = lifecycleRef.current;
       const schedule = scheduleRef.current;
       if (!lifecycle || !schedule) return;
-      if (typeof document !== "undefined" && document.hidden) {
-        const result = lifecycle.dispatch({
-          type: "PAUSE",
-          resumePhase: phase,
-        });
-        if (result.ok) {
-          setInterruptionReason("visibility_hidden");
-          setPauseContext(phase);
-          setScreen("paused");
-          setTrialStage("idle");
-          setActiveTrial(null);
-        }
-        return;
-      }
+      clearTrialTimers();
+      disposeRuntime();
 
       const snapshot = lifecycle.getSnapshot();
-      if (
-        (phase === "practice" && snapshot.state !== "practice") ||
-        (phase === "main" && snapshot.state !== "main")
-      ) {
-        if (phase === "practice" && snapshot.state === "ready") {
-          setScreen("ready");
-          setTrialStage("idle");
-          setActiveTrial(null);
-        }
+      setPracticeIndex(snapshot.practiceIndex);
+      setMainIndex(snapshot.mainIndex);
+      if (phase === "practice" && snapshot.state === "ready") {
+        setScreen("ready");
+        setTrialStage("idle");
+        setActiveTrial(null);
+        setFeedback(null);
         return;
+      }
+      if (snapshot.state !== phase) return;
+
+      // Break and completion decisions are made here, at the start of the next
+      // trial, so they apply however the previous interval ended (normal ITI,
+      // manual pause, or an interruption that invalidated main trial 30).
+      if (phase === "main") {
+        if (
+          !breakOfferedRef.current &&
+          snapshot.mainIndex === STROOP_CONFIGURATION.main.breakAfterTrialIndex
+        ) {
+          const offered = lifecycle.dispatch({ type: "OFFER_BREAK" });
+          if (offered.ok) {
+            breakOfferedRef.current = true;
+            breakStartRef.current = performance.now();
+            breakActionRef.current = false;
+            setScreen("break");
+            setTrialStage("idle");
+            setActiveTrial(null);
+            return;
+          }
+        }
+        if (snapshot.mainIndex >= schedule.main.length) {
+          const completed = lifecycle.dispatch({ type: "COMPLETE" });
+          if (completed.ok) showCompleted();
+          return;
+        }
       }
 
       const index =
         phase === "practice" ? snapshot.practiceIndex : snapshot.mainIndex;
       const trials = phase === "practice" ? schedule.practice : schedule.main;
       const trial = trials[index];
-      if (!trial) {
-        if (phase === "main") {
-          lifecycle.dispatch({ type: "COMPLETE" });
-          setScreen("completed");
-          setTrialStage("idle");
-          setActiveTrial(null);
-        }
+      if (!trial) return;
+
+      const unavailable = currentUnavailability();
+      if (unavailable) {
+        pauseOutsideStimulus(phase, unavailable);
         return;
       }
 
-      activePhaseRef.current = phase;
-      setActiveTrial(trial);
-      setTrialStage("fixation");
-      clearTrialTimers();
-      disposeRuntime();
+      const config = phaseConfiguration(phase);
+      flushSync(() => {
+        setFeedback(null);
+        setActiveTrial(trial);
+        setTrialStage("fixation");
+      });
+      const fixationOnsetMs = performance.now();
 
-      timeoutRef.current = window.setTimeout(() => {
-        timeoutRef.current = null;
-        setTrialStage("stimulus");
-        rafRef.current = window.requestAnimationFrame((onsetTimestamp) => {
-          rafRef.current = null;
-          const currentLifecycle = lifecycleRef.current;
-          if (!currentLifecycle) return;
+      // Covers fixation and the gap before the onset frame. Losing focus or
+      // visibility here pauses before onset; the trial was never presented,
+      // so it is shown again (with a new fixation) after resume.
+      preOnsetGuardRef.current = interruptionSource().subscribe((reason) => {
+        pauseOutsideStimulus(phase, reason);
+      });
 
-          const runtime = new TrialRuntime(
-            currentLifecycle,
-            new BrowserMonotonicClock(),
-            new BrowserDeadlineScheduler(),
-            new BrowserKeyboardInputSource(),
-            STROOP_RESPONSE_MAPPING,
-            interruptionRef.current ?? new BrowserInterruptionEventSource(),
-            "performance.now",
-            () => {
-              const finalSnapshot = currentLifecycle.getSnapshot();
-              const latestRecord = finalSnapshot.records[
-                finalSnapshot.records.length - 1
-              ] as TrialRecord<unknown, string, StroopResponse> | undefined;
+      fixationTimeoutRef.current = window.setTimeout(() => {
+        fixationTimeoutRef.current = null;
+        // Commit the stimulus synchronously so the next animation frame is the
+        // frame that first renders it (protocol §7 step 2).
+        flushSync(() => setTrialStage("stimulus"));
+        onsetFrameRef.current = window.requestAnimationFrame(
+          (onsetTimestamp) => {
+            onsetFrameRef.current = null;
+            const unavailableAtOnset = currentUnavailability();
+            if (unavailableAtOnset) {
+              pauseOutsideStimulus(phase, unavailableAtOnset);
+              return;
+            }
+            stopPreOnsetGuard();
+            const currentLifecycle = lifecycleRef.current;
+            if (!currentLifecycle) return;
 
-              setPracticeIndex(finalSnapshot.practiceIndex);
-              setMainIndex(finalSnapshot.mainIndex);
-              setActiveTrial(null);
-              setFeedback(latestRecord ?? null);
+            const runtime = new TrialRuntime(
+              currentLifecycle,
+              new BrowserMonotonicClock(),
+              new BrowserDeadlineScheduler(),
+              new BrowserKeyboardInputSource(),
+              STROOP_RESPONSE_MAPPING,
+              interruptionSource(),
+              "performance.now",
+              (outcome) => {
+                if (runtimeRef.current !== runtime) return;
+                const after = currentLifecycle.getSnapshot();
+                const latest = after.records[after.records.length - 1] as
+                  StroopRecord | undefined;
+                setPracticeIndex(after.practiceIndex);
+                setMainIndex(after.mainIndex);
 
-              if (finalSnapshot.state === "paused") {
-                if (
-                  latestRecord &&
-                  latestRecord.outcome.category === "invalid"
-                ) {
-                  if (latestRecord.outcome.reason === "visibility_lost") {
-                    setInterruptionReason("visibility_hidden");
-                  } else if (latestRecord.outcome.reason === "interrupt") {
-                    setInterruptionReason("window_blur");
-                  } else {
-                    setInterruptionReason("document_focus_lost");
-                  }
+                if (after.state === "technical_error") {
+                  setScreen("technical");
+                  setTrialStage("idle");
+                  setActiveTrial(null);
+                  return;
                 }
-                setPauseContext(activePhaseRef.current);
-                setScreen("paused");
-                setTrialStage("idle");
-                return;
-              }
-              if (finalSnapshot.state === "technical_error") {
-                setScreen("technical");
-                setTrialStage("idle");
-                return;
-              }
 
-              if (phase === "practice") {
-                setTrialStage("feedback");
-                feedbackTimeoutRef.current = window.setTimeout(() => {
-                  feedbackTimeoutRef.current = null;
-                  setFeedback(null);
-                  const afterFeedback = currentLifecycle.getSnapshot();
-                  setPracticeIndex(afterFeedback.practiceIndex);
-                  if (afterFeedback.state === "ready") {
-                    setScreen("ready");
+                const interruption = interruptionReasonFromOutcome(outcome);
+                if (after.state === "paused") {
+                  flushSync(() => {
+                    setInterruptionReason(interruption);
+                    setPauseInvalidatedTrial(true);
+                    setPauseContext(phase);
+                    setScreen("paused");
                     setTrialStage("idle");
-                  } else {
-                    prepareNextTrialRef.current("practice");
-                  }
-                }, STROOP_CONFIGURATION.practice.interTrialIntervalMs);
-              } else {
-                setTrialStage("iti");
-                itiTimeoutRef.current = window.setTimeout(() => {
-                  itiTimeoutRef.current = null;
-                  const afterIti = currentLifecycle.getSnapshot();
-                  setMainIndex(afterIti.mainIndex);
-                  if (
-                    afterIti.state === "main" &&
-                    afterIti.mainIndex ===
-                      STROOP_CONFIGURATION.main.breakAfterTrialIndex
-                  ) {
-                    const offered = currentLifecycle.dispatch({
-                      type: "OFFER_BREAK",
-                    });
-                    if (offered.ok) {
-                      breakStartRef.current = performance.now();
-                      breakActionRef.current = false;
-                      setScreen("break");
-                      setTrialStage("idle");
-                    }
-                  } else if (
-                    afterIti.state === "main" &&
-                    afterIti.mainIndex === STROOP_CONFIGURATION.main.trialCount
-                  ) {
-                    const completed = currentLifecycle.dispatch({
-                      type: "COMPLETE",
-                    });
-                    if (completed.ok) {
-                      setScreen("completed");
-                      setTrialStage("idle");
-                      setActiveTrial(null);
-                    }
-                  } else if (afterIti.state === "main") {
-                    prepareNextTrialRef.current("main");
-                  }
-                }, STROOP_CONFIGURATION.main.interTrialIntervalMs);
-              }
-            },
-          );
-          runtimeRef.current = runtime;
-          const started = runtime.start(
-            trial,
-            phase === "practice"
-              ? STROOP_CONFIGURATION.practice.responseDeadlineMs
-              : STROOP_CONFIGURATION.main.responseDeadlineMs,
-            onsetTimestamp,
-          );
-          if (!started.ok) {
-            setScreen("technical");
-            setTrialStage("idle");
-          }
-        });
-      }, STROOP_CONFIGURATION.practice.fixationMs);
+                    setActiveTrial(null);
+                    setFeedback(null);
+                  });
+                  return;
+                }
+
+                // Protocol §7 step 6: end the stimulus on the next frame and
+                // start the 500 ms interval from that offset callback.
+                offsetFrameRef.current = window.requestAnimationFrame(() => {
+                  offsetFrameRef.current = null;
+                  const showFeedback =
+                    phase === "practice" &&
+                    config.feedbackEnabled &&
+                    outcome.category !== "invalid";
+                  flushSync(() => {
+                    setActiveTrial(null);
+                    setFeedback(showFeedback ? (latest ?? null) : null);
+                    setTrialStage(showFeedback ? "feedback" : "iti");
+                  });
+                  itiTimeoutRef.current = window.setTimeout(() => {
+                    itiTimeoutRef.current = null;
+                    prepareNextTrialRef.current(phase);
+                  }, config.interTrialIntervalMs);
+                });
+              },
+            );
+            runtimeRef.current = runtime;
+            const started = runtime.start(
+              trial,
+              config.responseDeadlineMs,
+              onsetTimestamp,
+              fixationOnsetMs,
+            );
+            if (!started.ok) {
+              runtimeRef.current = null;
+              setScreen("technical");
+              setTrialStage("idle");
+              setActiveTrial(null);
+            }
+          },
+        );
+      }, config.fixationMs);
     },
-    [clearTrialTimers, disposeRuntime],
+    [
+      clearTrialTimers,
+      disposeRuntime,
+      interruptionSource,
+      pauseOutsideStimulus,
+      setTrialStage,
+      showCompleted,
+      stopPreOnsetGuard,
+    ],
   );
 
   useEffect(() => {
@@ -323,6 +414,9 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
       clearTrialTimers();
       disposeRuntime();
       stopBreakInterruption();
+      breakOfferedRef.current = false;
+      breakActionRef.current = false;
+      breakStartRef.current = null;
       const seed =
         seedOverride === undefined ? createSessionSeed() : seedOverride;
       if (seed === null) {
@@ -349,12 +443,13 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
         lifecycle.dispatch({ type: "OPEN_INSTRUCTIONS" });
         lifecycleRef.current = lifecycle;
         scheduleRef.current = schedule;
-        interruptionRef.current = new BrowserInterruptionEventSource();
         setPracticeIndex(0);
         setMainIndex(0);
         setFeedback(null);
         setInterruptionReason(null);
+        setPauseInvalidatedTrial(false);
         setPauseContext(null);
+        setActiveTrial(null);
         setScreen("instructions");
         setTrialStage("idle");
       } catch {
@@ -364,7 +459,7 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
         setTrialStage("idle");
       }
     },
-    [clearTrialTimers, disposeRuntime, stopBreakInterruption],
+    [clearTrialTimers, disposeRuntime, setTrialStage, stopBreakInterruption],
   );
 
   const beginPractice = useCallback(() => {
@@ -372,15 +467,14 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
     if (!lifecycle) return;
     const started = lifecycle.dispatch({ type: "BEGIN_PRACTICE" });
     if (!started.ok) return;
-    const snapshot = lifecycle.getSnapshot();
-    if (snapshot.state === "ready") {
+    if (lifecycle.getSnapshot().state === "ready") {
       setScreen("ready");
       setTrialStage("idle");
     } else {
       setScreen("practice");
       prepareNextTrial("practice");
     }
-  }, [prepareNextTrial]);
+  }, [prepareNextTrial, setTrialStage]);
 
   const beginMain = useCallback(() => {
     const lifecycle = lifecycleRef.current;
@@ -391,31 +485,37 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
     prepareNextTrial("main");
   }, [prepareNextTrial]);
 
-  const pauseSession = useCallback(() => {
+  /** Returns true when the session was paused by this call. */
+  const pauseSession = useCallback((): boolean => {
     const lifecycle = lifecycleRef.current;
-    if (!lifecycle) return;
+    if (!lifecycle) return false;
     const snapshot = lifecycle.getSnapshot();
     if (snapshot.state === "practice" || snapshot.state === "main") {
-      clearTrialTimers();
-      disposeRuntime();
-      const result = lifecycle.dispatch({ type: "PAUSE" });
-      if (result.ok) {
-        setPauseContext(snapshot.state === "practice" ? "practice" : "main");
-        setScreen("paused");
-        setTrialStage("idle");
-        setActiveTrial(null);
+      // A presented stimulus must end by response, deadline, or interruption;
+      // pausing it would discard the trial and later replay it.
+      if (
+        trialStageRef.current === "stimulus" ||
+        snapshot.activeTrial !== null
+      ) {
+        return false;
       }
-    } else if (snapshot.state === "break") {
+      return pauseOutsideStimulus(snapshot.state, null);
+    }
+    if (snapshot.state === "break") {
       const result = lifecycle.dispatch({
         type: "PAUSE",
         resumePhase: "break",
       });
       if (result.ok) {
+        setInterruptionReason(null);
+        setPauseInvalidatedTrial(false);
         setPauseContext("break");
         setScreen("paused");
+        return true;
       }
     }
-  }, [activeTrial, clearTrialTimers, disposeRuntime]);
+    return false;
+  }, [pauseOutsideStimulus]);
 
   const resumeSession = useCallback(() => {
     const lifecycle = lifecycleRef.current;
@@ -424,24 +524,20 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
     if (!result.ok) return;
     const snapshot = lifecycle.getSnapshot();
     setInterruptionReason(null);
+    setPauseInvalidatedTrial(false);
     setPauseContext(null);
     if (snapshot.state === "break") {
       setScreen("break");
-    } else if (snapshot.state === "practice") {
-      setScreen("practice");
-      prepareNextTrial("practice");
-    } else if (snapshot.state === "main") {
-      setScreen("main");
-      prepareNextTrial("main");
-    } else if (snapshot.state === "ready") {
-      setScreen("ready");
+    } else if (snapshot.state === "practice" || snapshot.state === "main") {
+      setScreen(snapshot.state);
+      prepareNextTrial(snapshot.state);
     }
   }, [prepareNextTrial]);
 
   const continueBreak = useCallback(() => {
     const lifecycle = lifecycleRef.current;
-    if (!lifecycle) return;
-    if (breakActionRef.current) return;
+    if (!lifecycle || breakActionRef.current) return;
+    if (lifecycle.getSnapshot().state !== "break") return;
     breakActionRef.current = true;
     stopBreakInterruption();
     const duration =
@@ -459,14 +555,16 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
 
   const skipBreak = useCallback(() => {
     const lifecycle = lifecycleRef.current;
-    if (!lifecycle) return;
-    if (breakActionRef.current) return;
+    if (!lifecycle || breakActionRef.current) return;
+    if (lifecycle.getSnapshot().state !== "break") return;
     breakActionRef.current = true;
     stopBreakInterruption();
-    lifecycle.dispatch({ type: "SKIP_BREAK" });
-    breakStartRef.current = null;
-    setScreen("main");
-    prepareNextTrial("main");
+    const skipped = lifecycle.dispatch({ type: "SKIP_BREAK" });
+    if (skipped.ok) {
+      breakStartRef.current = null;
+      setScreen("main");
+      prepareNextTrial("main");
+    }
   }, [prepareNextTrial, stopBreakInterruption]);
 
   const abortSession = useCallback(() => {
@@ -479,76 +577,52 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
     setTrialStage("idle");
     setFeedback(null);
     setScreen("aborted");
-  }, [clearTrialTimers, disposeRuntime, stopBreakInterruption]);
+  }, [clearTrialTimers, disposeRuntime, setTrialStage, stopBreakInterruption]);
 
   const restartSession = useCallback(() => {
     sessionStartedRef.current = false;
     beginSession(seedOverride);
   }, [beginSession, seedOverride]);
 
+  // During the break no trial timer runs; a visibility/focus loss pauses it.
   useEffect(() => {
     if (screen !== "break") {
       stopBreakInterruption();
       return;
     }
-    if (!interruptionRef.current) {
-      interruptionRef.current = new BrowserInterruptionEventSource();
-    }
-    interruptionCleanupRef.current = interruptionRef.current.subscribe(
+    breakInterruptionCleanupRef.current = interruptionSource().subscribe(
       (reason) => {
-        setInterruptionReason(reason);
-        const lifecycle = lifecycleRef.current;
-        const result = lifecycle?.dispatch({
+        const result = lifecycleRef.current?.dispatch({
           type: "PAUSE",
           resumePhase: "break",
         });
         if (result?.ok) {
+          setInterruptionReason(reason);
+          setPauseInvalidatedTrial(false);
           setPauseContext("break");
           setScreen("paused");
         }
       },
     );
     return stopBreakInterruption;
-  }, [screen, stopBreakInterruption]);
+  }, [interruptionSource, screen, stopBreakInterruption]);
 
+  // During feedback / inter-trial intervals the previous trial is already
+  // recorded; an interruption pauses before the next fixation.
   useEffect(() => {
     if (
       (screen !== "practice" && screen !== "main") ||
-      (trialStage !== "fixation" && trialStage !== "iti")
+      (trialStage !== "feedback" && trialStage !== "iti")
     ) {
       return;
     }
-    if (!interruptionRef.current) {
-      interruptionRef.current = new BrowserInterruptionEventSource();
-    }
-    const cleanup = interruptionRef.current.subscribe((reason) => {
-      clearTrialTimers();
-      disposeRuntime();
-      const lifecycle = lifecycleRef.current;
-      const snapshot = lifecycle?.getSnapshot();
-      if (!lifecycle || !snapshot) return;
-      if (snapshot.state !== "practice" && snapshot.state !== "main") return;
-      const phase =
-        snapshot.state === "practice" ? "practice" : "main";
-      const result = lifecycle.dispatch({
-        type: "PAUSE",
-        resumePhase: phase,
-      });
-      if (result.ok) {
-        setInterruptionReason(reason);
-        setPauseContext(phase);
-        setScreen("paused");
-        setTrialStage("idle");
-        setActiveTrial(null);
+    return interruptionSource().subscribe((reason) => {
+      const state = lifecycleRef.current?.getSnapshot().state;
+      if (state === "practice" || state === "main") {
+        pauseOutsideStimulus(state, reason);
       }
     });
-    return cleanup;
-  }, [
-    clearTrialTimers,
-    disposeRuntime,
-    screen,
-    trialStage,
-  ]);
+  }, [interruptionSource, pauseOutsideStimulus, screen, trialStage]);
 
   useEffect(() => {
     return () => {
@@ -557,6 +631,15 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
       stopBreakInterruption();
     };
   }, [clearTrialTimers, disposeRuntime, stopBreakInterruption]);
+
+  const getSnapshot = useCallback(
+    () => lifecycleRef.current?.getSnapshot() ?? null,
+    [],
+  );
+
+  const canPause =
+    screen === "break" ||
+    ((screen === "practice" || screen === "main") && trialStage !== "stimulus");
 
   return {
     screen,
@@ -567,6 +650,9 @@ export function useStroopSession(seedOverride?: number): StroopSessionHook {
     mainIndex,
     pauseContext,
     interruptionReason,
+    pauseInvalidatedTrial,
+    canPause,
+    getSnapshot,
     beginSession,
     beginPractice,
     beginMain,

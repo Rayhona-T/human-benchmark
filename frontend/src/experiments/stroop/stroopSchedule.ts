@@ -21,13 +21,20 @@ export function validateSeed(seed: number): number {
   return seed >>> 0;
 }
 
+/**
+ * Mulberry32 exactly as specified in HB-STROOP-1.0 §8:
+ *   t = state = (state + 0x6D2B79F5) mod 2^32
+ *   t = imul(t XOR (t >>> 15), t OR 1) mod 2^32
+ *   t = t XOR ((t + imul(t XOR (t >>> 7), t OR 61)) mod 2^32)
+ *   return unsigned (t XOR (t >>> 14)) / 2^32
+ */
 export function createMulberry32(seed: number): Mulberry32 {
   let state = validateSeed(seed);
   return () => {
     state = (state + 0x6d2b79f5) >>> 0;
     let t = state;
     t = Math.imul(t ^ (t >>> 15), t | 1) >>> 0;
-    t ^= Math.imul(t ^ (t >>> 7), t | 61);
+    t = (t ^ ((t + Math.imul(t ^ (t >>> 7), t | 61)) >>> 0)) >>> 0;
     t = (t ^ (t >>> 14)) >>> 0;
     return t / 0x100000000;
   };

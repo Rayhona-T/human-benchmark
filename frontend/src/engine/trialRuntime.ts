@@ -37,6 +37,7 @@ export class TrialRuntime<
   private status: "inactive" | "active" | "settled" = "inactive";
   private trial: EngineTrial<TStimulus, TCondition, TResponse> | null = null;
   private stimulusOnsetMs: number | null = null;
+  private fixationOnsetMs: number | null = null;
   private deadlineMs: number | null = null;
   private deadlineHandle: unknown = null;
   private input: ResponseInputController<TResponse>;
@@ -77,6 +78,7 @@ export class TrialRuntime<
     trial: EngineTrial<TStimulus, TCondition, TResponse>,
     deadlineMs: number,
     stimulusOnsetOverrideMs?: number,
+    fixationOnsetMs?: number,
   ): TrialRuntimeStartResult {
     if (this.status !== "inactive") {
       return { ok: false, reason: "lifecycle_rejected" };
@@ -126,6 +128,12 @@ export class TrialRuntime<
     this.trial = trial;
     this.status = "active";
     this.stimulusOnsetMs = onset;
+    this.fixationOnsetMs =
+      fixationOnsetMs !== undefined &&
+      Number.isFinite(fixationOnsetMs) &&
+      fixationOnsetMs <= onset
+        ? fixationOnsetMs
+        : null;
     this.deadlineMs = onset + deadlineMs;
     this.input.activate(this.stimulusOnsetMs, this.deadlineMs);
     this.input.attach(
@@ -202,9 +210,10 @@ export class TrialRuntime<
       | "deadline_unavailable"
       | "interrupt"
       | "protocol_error",
-  ): void {
-    if (this.status !== "active" || !this.trial) return;
-    this.settle(invalidOutcome(reason));
+    notify = true,
+  ): boolean {
+    if (this.status !== "active" || !this.trial) return false;
+    return this.settle(invalidOutcome(reason), undefined, null, null, notify);
   }
 
   private handleInterruption(reason: InterruptionReason): void {
@@ -215,8 +224,11 @@ export class TrialRuntime<
         : reason === "window_blur"
           ? "interrupt"
           : "focus_lost";
-    if (this.status === "active") {
-      this.handleInvalid(invalidReason);
+    if (this.status === "active" && this.trial) {
+      const trialId = this.trial.trialId;
+      // Record the invalid trial and pause before notifying observers, so an
+      // observer never sees the interrupted session as still running.
+      if (!this.handleInvalid(invalidReason, false)) return;
       const snapshot = this.lifecycle.getSnapshot();
       if (snapshot.state === "practice" || snapshot.state === "main") {
         this.lifecycle.dispatch({
@@ -224,6 +236,7 @@ export class TrialRuntime<
           resumePhase: snapshot.state,
         });
       }
+      this.onSettled?.(invalidOutcome(invalidReason), trialId);
     }
   }
 
@@ -232,8 +245,9 @@ export class TrialRuntime<
     response?: import("./contracts").EngineResponse<TResponse>,
     reactionTime: number | null = null,
     durationOverride: number | null = null,
-  ): void {
-    if (this.status !== "active" || !this.trial) return;
+    notify = true,
+  ): boolean {
+    if (this.status !== "active" || !this.trial) return false;
     this.status = "settled";
 
     const trialEnd =
@@ -242,7 +256,7 @@ export class TrialRuntime<
     const duration =
       durationOverride ?? calculateElapsedMs(this.stimulusOnsetMs, trialEnd);
     const timing: Partial<TimingMetadata> = {
-      fixationOnsetMs: null,
+      fixationOnsetMs: this.fixationOnsetMs,
       stimulusOnsetMs: this.stimulusOnsetMs,
       responseTimestampMs: response?.timestampMs ?? null,
       deadlineMs: this.deadlineMs,
@@ -276,7 +290,8 @@ export class TrialRuntime<
       this.input.complete();
     }
     this.interruptionController.stop();
-    this.onSettled?.(outcome, this.trial.trialId);
+    if (notify) this.onSettled?.(outcome, this.trial.trialId);
+    return true;
   }
 
   dispose(): void {

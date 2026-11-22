@@ -30,9 +30,9 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 4 — Task 2: Session & Trial Lifecycle | Approved |
 | Cycle 4 — Task 3: Timing, Input & Validity | Approved |
 | Cycle 4 — Task 4: Integration, Testing & Engine Approval | Approved |
-| Cycle 5 — Stroop Implementation | In progress — Task 1 approved; Task 2 complete awaiting human review; Tasks 3–4 not started |
-| Cycle 5 — Task 1: Stroop Adapter & Experiment Configuration | Approved |
-| Cycle 5 — Task 2: Stroop Practice & Main Presentation | Complete — awaiting human review |
+| Cycle 5 — Stroop Implementation | In progress — Task 1 approved; Task 2 audited and corrected, awaiting human approval; Tasks 3–4 not started |
+| Cycle 5 — Task 1: Stroop Adapter & Experiment Configuration | Approved — PRNG protocol-conformance correction applied, awaiting human review |
+| Cycle 5 — Task 2: Stroop Practice & Main Presentation | Verification audit complete — awaiting human approval |
 | Cycle 5 — Task 3: Stroop Timing, Input & Results | Not started |
 | Cycle 5 — Task 4: Stroop Implementation Review & Approval | Not started |
 | Cycle 6 — Flanker Implementation | Planned — not started |

@@ -81,6 +81,43 @@ accepted only if:
 If no candidate is accepted, schedule creation throws an explicit generation
 error rather than relaxing constraints or silently substituting an order.
 
+## Pseudorandom number generator
+
+All randomization uses Mulberry32 exactly as specified in HB-STROOP-1.0 §8
+(`createMulberry32` in `stroopSchedule.ts`):
+
+```text
+t = state = (state + 0x6D2B79F5) mod 2^32
+t = imul(t XOR (t >>> 15), t OR 1) mod 2^32
+t = t XOR ((t + imul(t XOR (t >>> 7), t OR 61)) mod 2^32)
+return unsigned (t XOR (t >>> 14)) / 2^32
+```
+
+The main stream is seeded with the session seed; the practice stream with
+`seed XOR 0x9E3779B9`. Derangements are selected with `floor(random() * 9)`
+and shuffles use Fisher–Yates, both consuming the continuing stream.
+
+Tests check the generator against reference vectors for seeds 0, 1, 1234,
+`0xFFFFFFFF`, and the seed-1234 practice stream. The vectors were computed
+independently from the protocol text with Python integer arithmetic and agree
+with the canonical published JavaScript Mulberry32.
+
+### Correction notice (Cycle 5, Task 1 correction)
+
+Before this correction, the implementation omitted the `t +` term in the third
+step (`t ^= imul(...)`). That variant was deterministic and produced balanced,
+constraint-satisfying schedules, but it was **not** the protocol algorithm, so
+its schedules could not be reproduced from the published specification. It was
+nevertheless labeled `HB-STROOP-shuffle-v1`.
+
+The same seed now produces a different schedule than it did before the
+correction. Any schedule generated before the correction cannot be reproduced
+from its seed with the corrected algorithm, and should be identified by its
+realized order, not its seed. The project has no persistence, so no participant
+sessions were stored with the earlier variant. The protocol, identifier
+`HB-STROOP-shuffle-v1`, pool construction, constraints, and candidate limit are
+unchanged.
+
 ## Reproducibility
 
 A valid unsigned 32-bit seed produces reproducible practice and main arrays.
