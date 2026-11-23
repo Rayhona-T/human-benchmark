@@ -4,6 +4,7 @@ import io
 import re
 from pathlib import Path
 
+import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
@@ -11,7 +12,7 @@ from sqlalchemy import inspect, text
 
 from app.database import alembic_config, create_db_engine, head_revision
 from app.models import Base
-from tests.conftest import migrate, sqlite_url
+from tests.conftest import migrate, postgres_test_url, sqlite_url
 
 TABLES = {"participants", "sessions", "trials"}
 
@@ -107,3 +108,17 @@ def test_postgresql_sql_renders_offline() -> None:
     assert "ON DELETE CASCADE" in sql
     assert "CONSTRAINT uq_trials_session_phase_index UNIQUE (session_id, phase, trial_index)" in sql
     assert "CREATE INDEX ix_sessions_experiment_created" in sql
+
+
+@pytest.mark.skipif(postgres_test_url() is None, reason="HB_TEST_POSTGRES_URL not set")
+def test_live_postgresql_schema_matches_the_models(database_url: str) -> None:
+    """Live PostgreSQL only: the migrated schema equals the models exactly."""
+    engine = create_db_engine(database_url)
+    try:
+        assert engine.dialect.name == "postgresql"
+        with engine.connect() as connection:
+            context = MigrationContext.configure(connection, opts={"compare_type": True})
+            assert compare_metadata(context, Base.metadata) == []
+            assert context.get_current_revision() == head_revision()
+    finally:
+        engine.dispose()

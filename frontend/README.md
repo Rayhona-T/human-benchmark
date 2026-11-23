@@ -158,3 +158,12 @@ methodology (`HB-ANALYSIS-1.1`) is documented in `ANALYSIS_METHODOLOGY.md`.
 The participant results page (response-time dot plot, distribution summary,
 contrasts, speed–accuracy notes, and local CSV export) is documented in
 `RESULTS_EXPERIENCE.md` and `EXPORT_DATA_DICTIONARY.md`.
+
+## Optional session saving (development and test only)
+
+A complete session can optionally be saved to the local backend from its
+results page, after explicit agreement. This exists only in a dev-server build
+started with `VITE_HB_LOCAL_SAVE_API` set to a loopback address, for example
+`http://127.0.0.1:8000`, and uses the **provisional, unapproved** notice
+`HB-NOTICE-0.1-PROVISIONAL`. It is not approved data collection. See
+`PERSISTENCE_INTEGRATION.md`.

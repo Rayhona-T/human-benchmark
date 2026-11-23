@@ -10,6 +10,7 @@ import {
 } from "../shared/resultsFormat";
 import type { InvalidReason } from "../shared/sessionAnalysis";
 import type { ExportColumn } from "../shared/exportTrials";
+import type { ApiStimulus } from "../shared/persistence/sessionPayload";
 import type { StroopCondition, StroopStimulus } from "./stroop";
 import {
   RT_DISPLAY_MINIMUM_CORRECT,
@@ -100,3 +101,12 @@ export const STROOP_EXPORT_COLUMNS: readonly ExportColumn<StroopStimulus>[] = [
     value: (record) => record.stimulus.inkColor,
   },
 ];
+
+/**
+ * Stimulus attributes sent when a session is saved (backend StroopStimulus).
+ * Presentation constants (hex color, font, size, background) are fixed by the
+ * protocol ID and are not sent.
+ */
+export function stroopStimulusToApi(stimulus: StroopStimulus): ApiStimulus {
+  return { word: stimulus.word, ink_color: stimulus.inkColor };
+}

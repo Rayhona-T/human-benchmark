@@ -1,8 +1,13 @@
 # HUMAN BENCHMARK — Backend (Cycle 8 foundation)
 
-This is a standalone FastAPI service that can store Stroop and Flanker sessions.
-**The frontend does not use it yet** (that is Cycle 8 Task 3). It runs locally
-only.
+This is a standalone FastAPI service that can store **complete** Stroop and
+Flanker sessions. It runs locally only.
+
+Since Cycle 8 Task 3, the frontend can call it from an optional, opt-in save
+panel. That panel exists only in a dev-server build configured with
+`VITE_HB_LOCAL_SAVE_API`, and shows a **provisional, unapproved** notice. See
+[frontend/PERSISTENCE_INTEGRATION.md](../frontend/PERSISTENCE_INTEGRATION.md).
+It is a development and test flow, not approved data collection.
 
 Design documents:
 - [BACKEND_ARCHITECTURE.md](../docs/backend/BACKEND_ARCHITECTURE.md);
@@ -122,7 +127,28 @@ pin a version that loads and record it in `requirements.txt`.
 
 - GET and DELETE have no ownership proof. They are for local development only;
   deployment blockers are listed in BACKEND_ARCHITECTURE.md §9.
-- PostgreSQL is verified only by rendering SQL offline. No live PostgreSQL test
-  has been run.
+- **No live PostgreSQL test has been run.** PostgreSQL is verified by rendering
+  SQL offline, and the driver reached a local server only as far as
+  authentication. The suite can run against a real server, see below.
+
+## Optional: run the tests against a live PostgreSQL server
+
+Create an **empty** database whose name ends in `_test`, plus a throwaway role
+for it (do not reuse a real password), then:
+
+```powershell
+$env:HB_TEST_POSTGRES_URL = "postgresql+pg8000://hb_tester:<password>@127.0.0.1:5432/human_benchmark_test"
+.\.venv\Scripts\python -m pytest
+Remove-Item Env:HB_TEST_POSTGRES_URL
+```
+
+Every database-backed test then runs on PostgreSQL. That covers migrations,
+inserts, every constraint, duplicates, rollback, cascading deletion, and an
+exact schema-to-model comparison.
+
+**The schema is dropped and re-created before each test.** The suite refuses
+any database not named `*_test`. In this mode tracebacks are kept short so the
+password is not printed. `pg8000` is a pure-Python driver (Smart App Control
+safe) and is only needed for this.
 - Requests to non-API routes (`/docs`, `/openapi.json`) are logged with the route
   `unmatched`.

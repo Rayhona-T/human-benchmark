@@ -6,3 +6,13 @@ httpx==0.28.1
 ruff==0.17.6
 mypy==2.4.1
 pip-audit==2.10.1
+
+# Optional live PostgreSQL test run (tests/conftest.py, HB_TEST_POSTGRES_URL).
+# pg8000 is a pure-Python driver supported by SQLAlchemy; it was chosen
+# because compiled drivers may be blocked by Windows Smart App Control. All
+# five packages below are pure-Python wheels. Not needed to run the app.
+pg8000==1.31.6
+scramp==1.5.0
+asn1crypto==1.5.1
+python-dateutil==4.0.0
+tzdata==2026.6

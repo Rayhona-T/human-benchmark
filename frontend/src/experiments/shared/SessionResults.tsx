@@ -14,6 +14,9 @@ import {
 } from "./exportTrials";
 import { buildRtPlotData } from "./rtPlotData";
 import { RtDotPlot } from "./RtDotPlot";
+import { appSaveConfig, type SaveConfig } from "./persistence/saveConfig";
+import { SaveSessionPanel } from "./persistence/SaveSessionPanel";
+import type { ResultsSave } from "./persistence/sessionPayload";
 import {
   speedAccuracyDetail,
   type ConditionResult,
@@ -452,9 +455,12 @@ function downloadCsv(fileName: string, text: string) {
 function ExportPanel<TStimulus>({
   results,
   exportData,
+  saveOffered,
 }: {
   results: SessionResultsData;
   exportData: ResultsExport<TStimulus>;
+  /** True when the optional development save panel is shown below. */
+  saveOffered: boolean;
 }) {
   const columns = [
     ...BASE_COLUMNS_BEFORE,
@@ -470,9 +476,10 @@ function ExportPanel<TStimulus>({
       <h2 id="results-export">Your data</h2>
       <p>
         You can download every trial recorded in this session, including
-        practice, as a CSV file for a spreadsheet. The file is created in your
-        browser; nothing is uploaded or stored by HUMAN BENCHMARK, and the data
-        is gone once you leave this page.
+        practice, as a CSV file for a spreadsheet.{" "}
+        {saveOffered
+          ? "The file is created in your browser, and downloading it uploads nothing. Nothing is stored by HUMAN BENCHMARK unless you choose to save the session below; otherwise the data is gone once you leave this page."
+          : "The file is created in your browser; nothing is uploaded or stored by HUMAN BENCHMARK, and the data is gone once you leave this page."}
       </p>
       <div className="session-results__export-actions">
         <Button
@@ -536,13 +543,20 @@ export function SessionResults<
   copy,
   responseWindowMs = 2000,
   exportData,
+  saveData,
+  saveConfig = appSaveConfig(),
 }: {
   results: SessionResultsData<TCondition, TId>;
   copy: ResultsCopy<TCondition, TId>;
   /** Protocol response deadline; the plot's axis spans 0 to this value. */
   responseWindowMs?: number;
   exportData?: ResultsExport<TStimulus>;
+  /** The finished session, for the optional development save panel. */
+  saveData?: ResultsSave<TStimulus>;
+  /** Where saving goes; null (production, or not configured) hides it. */
+  saveConfig?: SaveConfig | null;
 }) {
+  const saveOffered = Boolean(saveData && saveConfig);
   const minimum = results.minimumCorrectForMedian;
   const plot = buildRtPlotData(results, responseWindowMs);
   const invalidEntries = Object.entries(results.invalidReasons) as [
@@ -754,7 +768,15 @@ export function SessionResults<
       ) : null}
 
       {exportData ? (
-        <ExportPanel results={results} exportData={exportData} />
+        <ExportPanel
+          results={results}
+          exportData={exportData}
+          saveOffered={saveOffered}
+        />
+      ) : null}
+
+      {saveData && saveConfig ? (
+        <SaveSessionPanel save={saveData} config={saveConfig} />
       ) : null}
 
       <section

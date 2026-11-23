@@ -8,6 +8,7 @@ import { STROOP_CONFIGURATION, STROOP_RESPONSE_MAPPING } from "./stroop";
 import { StroopKeyLegend } from "./StroopKeyLegend";
 import { StroopResults } from "./StroopResults";
 import { computeStroopResults } from "./stroopAnalysis";
+import { stroopStimulusToApi } from "./stroopResultsFormat";
 import { StroopStimulus } from "./StroopStimulus";
 import { useStroopSession } from "./useStroopSession";
 import "./StroopExperiment.css";
@@ -39,6 +40,9 @@ export function StroopExperimentPage({
     if (!snapshot) return null;
     return {
       records: snapshot.records,
+      status: snapshot.status,
+      breakTaken: snapshot.breakTaken,
+      breakDurationMs: snapshot.breakDurationMs,
       analysis: computeStroopResults({
         status: snapshot.status,
         records: snapshot.records,
@@ -174,7 +178,18 @@ export function StroopExperimentPage({
       completionDescription="You completed the Stroop task. The task explores condition differences in responding to ink color while words with competing meanings are present. This screen does not provide a cognitive score or diagnosis."
       results={
         results ? (
-          <StroopResults results={results.analysis} records={results.records} />
+          <StroopResults
+            results={results.analysis}
+            records={results.records}
+            saveData={{
+              experimentId: "stroop",
+              status: results.status,
+              records: results.records,
+              breakTaken: results.breakTaken,
+              breakDurationMs: results.breakDurationMs,
+              stimulusToApi: stroopStimulusToApi,
+            }}
+          />
         ) : null
       }
     />

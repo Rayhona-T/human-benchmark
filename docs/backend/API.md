@@ -3,11 +3,16 @@
 - **Base URL (local):** `http://127.0.0.1:8000/api/v1`
 - **Interactive documentation:** `http://127.0.0.1:8000/docs` (generated from the
   code, so it always matches)
-- **Status:** backend-only. **The frontend does not call any of these endpoints
-  yet.**
+- **Status:** local development and test only.
+  - **The only frontend caller is `POST /sessions`**, from the optional save
+    panel on a complete session's results page. That panel exists only in a
+    dev-server build configured with a loopback address
+    (frontend/PERSISTENCE_INTEGRATION.md).
+  - The consent notice accepted today (`HB-NOTICE-0.1-PROVISIONAL`) is
+    **provisional and not approved** for real participant data.
 
 GET and DELETE are for local development only, because they have no ownership
-proof (BACKEND_ARCHITECTURE.md §9).
+proof (BACKEND_ARCHITECTURE.md §9). The frontend never calls them.
 
 ## Conventions
 
@@ -146,7 +151,7 @@ everything is stored, or nothing is. The server generates the session ID.
 | `consent.notice_version` | string | The ID of the notice shown. It must be on the server allowlist (`app/consent.py`, exact case-sensitive match), otherwise 422 `invalid_session` at `consent.notice_version`. Currently only `HB-NOTICE-0.1-PROVISIONAL`: **a provisional placeholder for development and tests, not approved for real participant data** |
 | `experiment_id` | string | `stroop` or `flanker` |
 | `protocol_id`, `protocol_version`, `configuration_id`, `configuration_version` | string | Must be the approved values for the experiment: `HB-STROOP-1.0` / `1.0`, or `HB-FLANKER-1.0` / `1.0` |
-| `status` | string | `complete`, `incomplete`, `interrupted` or `technical_error` |
+| `status` | string | One of `complete`, `incomplete`, `interrupted` or `technical_error`, but **only `complete` can be saved** (Cycle 8 Task 3 policy). Any other value is rejected with 422 `invalid_session` at `status` |
 | `break_taken` | bool | If `true`, `break_duration_ms` is required |
 | `break_duration_ms` | number or null | ≥ 0. Allowed only after at least 30 main trials (the break is offered after trial 30) |
 | `randomization.seed` | int or null | 0 … 4,294,967,295. Required when the schedule was generated |
@@ -235,7 +240,7 @@ trials. There is no undo and no soft delete.
 ## Not provided (deliberately)
 
 - **Session listing or search** (Cycle 9, with ownership proof).
-- **Participant endpoints** (Task 3 decision, DATA_AND_PRIVACY.md §4).
+- **Participant endpoints** (deferred to Cycle 9; DATA_AND_PRIVACY.md §4).
 - **Updates (`PUT`/`PATCH`).** Stored sessions are immutable records; a
   correction is a delete plus a new save.
 - **Analysis or summary endpoints.** Results stay in the frontend's

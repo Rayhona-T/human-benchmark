@@ -19,6 +19,7 @@ import { computeFlankerResults } from "./flankerAnalysis";
 import {
   FLANKER_EXPORT_COLUMNS,
   FLANKER_RESULTS_COPY,
+  flankerStimulusToApi,
 } from "./flankerResultsCopy";
 import { FlankerArray } from "./FlankerStimulus";
 import { useFlankerSession } from "./useFlankerSession";
@@ -154,6 +155,9 @@ export function FlankerExperimentPage({
     if (!snapshot) return null;
     return {
       records: snapshot.records,
+      status: snapshot.status,
+      breakTaken: snapshot.breakTaken,
+      breakDurationMs: snapshot.breakDurationMs,
       analysis: computeFlankerResults({
         status: snapshot.status,
         records: snapshot.records,
@@ -349,6 +353,14 @@ export function FlankerExperimentPage({
                 experimentId: "flanker",
                 records: results.records,
                 stimulusColumns: FLANKER_EXPORT_COLUMNS,
+              }}
+              saveData={{
+                experimentId: "flanker",
+                status: results.status,
+                records: results.records,
+                breakTaken: results.breakTaken,
+                breakDurationMs: results.breakDurationMs,
+                stimulusToApi: flankerStimulusToApi,
               }}
             />
           ) : null

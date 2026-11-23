@@ -1,0 +1,4 @@
+# Contract fixtures are written by the code under test (JSON.stringify output)
+# and compared byte for byte; a backend test posts them to the real API.
+# Reformatting them would break that comparison.
+src/experiments/shared/persistence/__fixtures__/

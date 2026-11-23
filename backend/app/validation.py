@@ -21,6 +21,10 @@ from .schemas import PlannedTrialIn, SessionCreate, TrialIn
 TIME_TOLERANCE_MS = 0.001
 MAX_ALLOCATION_JSON_CHARS = 2048
 RESPONDED = ("correct", "incorrect")
+# Cycle 8 Task 3: only complete sessions may be saved (the engine's own
+# completion status). The structural rules below still describe incomplete
+# sessions, so the policy can be widened later without rewriting them.
+PERSISTABLE_STATUSES = ("complete",)
 
 
 @dataclass(frozen=True)
@@ -43,6 +47,8 @@ def validate_session(payload: SessionCreate) -> list[Issue]:
 
     if not payload.consent.confirmed:
         found.add("consent.confirmed", "must be true; a session is stored only with consent")
+    if payload.status not in PERSISTABLE_STATUSES:
+        found.add("status", "only complete sessions can be saved")
     if not is_accepted_notice(payload.consent.notice_version):
         found.add(
             "consent.notice_version",

@@ -1,0 +1,2269 @@
+{
+  "data_schema_version": 1,
+  "client_session_id": "5d1c9a3e-7b2f-4c6d-8e1a-3f5b7d9c1e24",
+  "consent": {
+    "confirmed": true,
+    "notice_version": "HB-NOTICE-0.1-PROVISIONAL"
+  },
+  "experiment_id": "stroop",
+  "protocol_id": "HB-STROOP-1.0",
+  "protocol_version": "1.0",
+  "configuration_id": "HB-STROOP-1.0",
+  "configuration_version": "1.0",
+  "status": "complete",
+  "break_taken": false,
+  "break_duration_ms": 0,
+  "randomization": {
+    "seed": 1234,
+    "prng_id": "HB-STROOP-shuffle-v1",
+    "randomization_version": "1",
+    "schedule_generation_status": "generated",
+    "allocation_details": {
+      "selectedDerangement": [
+        1,
+        0,
+        3,
+        2
+      ],
+      "practiceSeedUnsigned32": 2654436715
+    },
+    "practice_order": [
+      {
+        "trial_index": 1,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 2,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 3,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "CHAIR",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 4,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "HOUSE",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 5,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 6,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 7,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "TABLE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 8,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 9,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 10,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 11,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 12,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "BOOK",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      }
+    ],
+    "main_order": [
+      {
+        "trial_index": 1,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 2,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 3,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "CHAIR",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 4,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 5,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 6,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 7,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 8,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 9,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 10,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "HOUSE",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 11,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 12,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "TABLE",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 13,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "BOOK",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 14,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 15,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 16,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 17,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 18,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 19,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 20,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "TABLE",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 21,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "MUSIC",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 22,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 23,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 24,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 25,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 26,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 27,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 28,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 29,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 30,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 31,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "CHAIR",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 32,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 33,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "MUSIC",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 34,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 35,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "CHAIR",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 36,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 37,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "TABLE",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 38,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "HOUSE",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 39,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 40,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 41,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "GREEN",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 42,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "HOUSE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 43,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 44,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 45,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "MUSIC",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 46,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "BOOK",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 47,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "CHAIR",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 48,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 49,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 50,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 51,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "BOOK",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 52,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 53,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "HOUSE",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      },
+      {
+        "trial_index": 54,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "RED",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 55,
+        "condition": "incongruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 56,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "MUSIC",
+          "ink_color": "green"
+        },
+        "correct_response": "j"
+      },
+      {
+        "trial_index": 57,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "TABLE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 58,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "BLUE",
+          "ink_color": "blue"
+        },
+        "correct_response": "f"
+      },
+      {
+        "trial_index": 59,
+        "condition": "neutral",
+        "stimulus": {
+          "word": "BOOK",
+          "ink_color": "red"
+        },
+        "correct_response": "d"
+      },
+      {
+        "trial_index": 60,
+        "condition": "congruent",
+        "stimulus": {
+          "word": "YELLOW",
+          "ink_color": "yellow"
+        },
+        "correct_response": "k"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "phase": "practice",
+      "trial_index": 1,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 0,
+        "stimulus_onset_ms": 512,
+        "response_timestamp_ms": 912,
+        "deadline_ms": 2512,
+        "stimulus_offset_ms": 928,
+        "iti_end_ms": 1428
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 2,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 1428,
+        "stimulus_onset_ms": 1936,
+        "response_timestamp_ms": 2336,
+        "deadline_ms": 3936,
+        "stimulus_offset_ms": 2352,
+        "iti_end_ms": 2852
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 3,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "CHAIR",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 2852,
+        "stimulus_onset_ms": 3360,
+        "response_timestamp_ms": 3760,
+        "deadline_ms": 5360,
+        "stimulus_offset_ms": 3776,
+        "iti_end_ms": 4276
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 4,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "HOUSE",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 4276,
+        "stimulus_onset_ms": 4784,
+        "response_timestamp_ms": 5184,
+        "deadline_ms": 6784,
+        "stimulus_offset_ms": 5200,
+        "iti_end_ms": 5700
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 5,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 5700,
+        "stimulus_onset_ms": 6208,
+        "response_timestamp_ms": 6608,
+        "deadline_ms": 8208,
+        "stimulus_offset_ms": 6624,
+        "iti_end_ms": 7124
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 6,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 7124,
+        "stimulus_onset_ms": 7632,
+        "response_timestamp_ms": 8032,
+        "deadline_ms": 9632,
+        "stimulus_offset_ms": 8048,
+        "iti_end_ms": 8548
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 7,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "TABLE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 8548,
+        "stimulus_onset_ms": 9056,
+        "response_timestamp_ms": 9456,
+        "deadline_ms": 11056,
+        "stimulus_offset_ms": 9472,
+        "iti_end_ms": 9972
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 8,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 9972,
+        "stimulus_onset_ms": 10480,
+        "response_timestamp_ms": 10880,
+        "deadline_ms": 12480,
+        "stimulus_offset_ms": 10896,
+        "iti_end_ms": 11396
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 9,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 11396,
+        "stimulus_onset_ms": 11904,
+        "response_timestamp_ms": 12304,
+        "deadline_ms": 13904,
+        "stimulus_offset_ms": 12320,
+        "iti_end_ms": 12820
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 10,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 12820,
+        "stimulus_onset_ms": 13328,
+        "response_timestamp_ms": 13728,
+        "deadline_ms": 15328,
+        "stimulus_offset_ms": 13744,
+        "iti_end_ms": 14244
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 11,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 14244,
+        "stimulus_onset_ms": 14752,
+        "response_timestamp_ms": 15152,
+        "deadline_ms": 16752,
+        "stimulus_offset_ms": 15168,
+        "iti_end_ms": 15668
+      }
+    },
+    {
+      "phase": "practice",
+      "trial_index": 12,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "BOOK",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 15668,
+        "stimulus_onset_ms": 16176,
+        "response_timestamp_ms": 16576,
+        "deadline_ms": 18176,
+        "stimulus_offset_ms": 16592,
+        "iti_end_ms": 17092
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 1,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 17092,
+        "stimulus_onset_ms": 17600,
+        "response_timestamp_ms": 18000,
+        "deadline_ms": 19600,
+        "stimulus_offset_ms": 18016,
+        "iti_end_ms": 18516
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 2,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 18516,
+        "stimulus_onset_ms": 19024,
+        "response_timestamp_ms": 19424,
+        "deadline_ms": 21024,
+        "stimulus_offset_ms": 19440,
+        "iti_end_ms": 19940
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 3,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "CHAIR",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 19940,
+        "stimulus_onset_ms": 20448,
+        "response_timestamp_ms": 20848,
+        "deadline_ms": 22448,
+        "stimulus_offset_ms": 20864,
+        "iti_end_ms": 21364
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 4,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 21364,
+        "stimulus_onset_ms": 21872,
+        "response_timestamp_ms": 22272,
+        "deadline_ms": 23872,
+        "stimulus_offset_ms": 22288,
+        "iti_end_ms": 22788
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 5,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "f",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 22788,
+        "stimulus_onset_ms": 23296,
+        "response_timestamp_ms": 23696,
+        "deadline_ms": 25296,
+        "stimulus_offset_ms": 23712,
+        "iti_end_ms": 24212
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 6,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 24212,
+        "stimulus_onset_ms": 24720,
+        "response_timestamp_ms": 25120,
+        "deadline_ms": 26720,
+        "stimulus_offset_ms": 25136,
+        "iti_end_ms": 25636
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 7,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 25636,
+        "stimulus_onset_ms": 26144,
+        "response_timestamp_ms": null,
+        "deadline_ms": 28144,
+        "stimulus_offset_ms": 28160,
+        "iti_end_ms": 28660
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 8,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 28660,
+        "stimulus_onset_ms": 29168,
+        "response_timestamp_ms": 29568,
+        "deadline_ms": 31168,
+        "stimulus_offset_ms": 29584,
+        "iti_end_ms": 30084
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 9,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 30084,
+        "stimulus_onset_ms": 30592,
+        "response_timestamp_ms": 30992,
+        "deadline_ms": 32592,
+        "stimulus_offset_ms": 31008,
+        "iti_end_ms": 31508
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 10,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "HOUSE",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "d",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 31508,
+        "stimulus_onset_ms": 32016,
+        "response_timestamp_ms": 32416,
+        "deadline_ms": 34016,
+        "stimulus_offset_ms": 32432,
+        "iti_end_ms": 32932
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 11,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 32932,
+        "stimulus_onset_ms": 33440,
+        "response_timestamp_ms": 33840,
+        "deadline_ms": 35440,
+        "stimulus_offset_ms": 33856,
+        "iti_end_ms": 34356
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 12,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "TABLE",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 34356,
+        "stimulus_onset_ms": 34864,
+        "response_timestamp_ms": 35264,
+        "deadline_ms": 36864,
+        "stimulus_offset_ms": 35280,
+        "iti_end_ms": 35780
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 13,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "BOOK",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 35780,
+        "stimulus_onset_ms": 36288,
+        "response_timestamp_ms": 36688,
+        "deadline_ms": 38288,
+        "stimulus_offset_ms": 36704,
+        "iti_end_ms": 37204
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 14,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 37204,
+        "stimulus_onset_ms": 37712,
+        "response_timestamp_ms": null,
+        "deadline_ms": 39712,
+        "stimulus_offset_ms": 39728,
+        "iti_end_ms": 40228
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 15,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "d",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 40228,
+        "stimulus_onset_ms": 40736,
+        "response_timestamp_ms": 41136,
+        "deadline_ms": 42736,
+        "stimulus_offset_ms": 41152,
+        "iti_end_ms": 41652
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 16,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 41652,
+        "stimulus_onset_ms": 42160,
+        "response_timestamp_ms": 42560,
+        "deadline_ms": 44160,
+        "stimulus_offset_ms": 42576,
+        "iti_end_ms": 43076
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 17,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 43076,
+        "stimulus_onset_ms": 43584,
+        "response_timestamp_ms": 43984,
+        "deadline_ms": 45584,
+        "stimulus_offset_ms": 44000,
+        "iti_end_ms": 44500
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 18,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 44500,
+        "stimulus_onset_ms": 45008,
+        "response_timestamp_ms": 45408,
+        "deadline_ms": 47008,
+        "stimulus_offset_ms": 45424,
+        "iti_end_ms": 45924
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 19,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 45924,
+        "stimulus_onset_ms": 46432,
+        "response_timestamp_ms": 46832,
+        "deadline_ms": 48432,
+        "stimulus_offset_ms": 46848,
+        "iti_end_ms": 47348
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 20,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "TABLE",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "d",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 47348,
+        "stimulus_onset_ms": 47856,
+        "response_timestamp_ms": 48256,
+        "deadline_ms": 49856,
+        "stimulus_offset_ms": 48272,
+        "iti_end_ms": 48772
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 21,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "MUSIC",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 48772,
+        "stimulus_onset_ms": 49280,
+        "response_timestamp_ms": null,
+        "deadline_ms": 51280,
+        "stimulus_offset_ms": 51296,
+        "iti_end_ms": 51796
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 22,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 51796,
+        "stimulus_onset_ms": 52304,
+        "response_timestamp_ms": 52704,
+        "deadline_ms": 54304,
+        "stimulus_offset_ms": 52720,
+        "iti_end_ms": 53220
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 23,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 53220,
+        "stimulus_onset_ms": 53728,
+        "response_timestamp_ms": 54128,
+        "deadline_ms": 55728,
+        "stimulus_offset_ms": 54144,
+        "iti_end_ms": 54644
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 24,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 54644,
+        "stimulus_onset_ms": 55152,
+        "response_timestamp_ms": 55552,
+        "deadline_ms": 57152,
+        "stimulus_offset_ms": 55568,
+        "iti_end_ms": 56068
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 25,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "f",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 56068,
+        "stimulus_onset_ms": 56576,
+        "response_timestamp_ms": 56976,
+        "deadline_ms": 58576,
+        "stimulus_offset_ms": 56992,
+        "iti_end_ms": 57492
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 26,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 57492,
+        "stimulus_onset_ms": 58000,
+        "response_timestamp_ms": 58400,
+        "deadline_ms": 60000,
+        "stimulus_offset_ms": 58416,
+        "iti_end_ms": 58916
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 27,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 58916,
+        "stimulus_onset_ms": 59424,
+        "response_timestamp_ms": 59824,
+        "deadline_ms": 61424,
+        "stimulus_offset_ms": 59840,
+        "iti_end_ms": 60340
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 28,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 60340,
+        "stimulus_onset_ms": 60848,
+        "response_timestamp_ms": null,
+        "deadline_ms": 62848,
+        "stimulus_offset_ms": 62864,
+        "iti_end_ms": 63364
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 29,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 63364,
+        "stimulus_onset_ms": 63872,
+        "response_timestamp_ms": 64272,
+        "deadline_ms": 65872,
+        "stimulus_offset_ms": 64288,
+        "iti_end_ms": 64788
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 30,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "d",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 64788,
+        "stimulus_onset_ms": 65296,
+        "response_timestamp_ms": 65696,
+        "deadline_ms": 67296,
+        "stimulus_offset_ms": 65712,
+        "iti_end_ms": 66212
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 31,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "CHAIR",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 66212,
+        "stimulus_onset_ms": 66720,
+        "response_timestamp_ms": 67120,
+        "deadline_ms": 68720,
+        "stimulus_offset_ms": 67136,
+        "iti_end_ms": 67636
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 32,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 67636,
+        "stimulus_onset_ms": 68144,
+        "response_timestamp_ms": 68544,
+        "deadline_ms": 70144,
+        "stimulus_offset_ms": 68560,
+        "iti_end_ms": 69060
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 33,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "MUSIC",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 69060,
+        "stimulus_onset_ms": 69568,
+        "response_timestamp_ms": 69968,
+        "deadline_ms": 71568,
+        "stimulus_offset_ms": 69984,
+        "iti_end_ms": 70484
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 34,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 70484,
+        "stimulus_onset_ms": 70992,
+        "response_timestamp_ms": 71392,
+        "deadline_ms": 72992,
+        "stimulus_offset_ms": 71408,
+        "iti_end_ms": 71908
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 35,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "CHAIR",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 71908,
+        "stimulus_onset_ms": 72416,
+        "response_timestamp_ms": null,
+        "deadline_ms": 74416,
+        "stimulus_offset_ms": 74432,
+        "iti_end_ms": 74932
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 36,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 74932,
+        "stimulus_onset_ms": 75440,
+        "response_timestamp_ms": 75840,
+        "deadline_ms": 77440,
+        "stimulus_offset_ms": 75856,
+        "iti_end_ms": 76356
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 37,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "TABLE",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 76356,
+        "stimulus_onset_ms": 76864,
+        "response_timestamp_ms": 77264,
+        "deadline_ms": 78864,
+        "stimulus_offset_ms": 77280,
+        "iti_end_ms": 77780
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 38,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "HOUSE",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 77780,
+        "stimulus_onset_ms": 78288,
+        "response_timestamp_ms": 78688,
+        "deadline_ms": 80288,
+        "stimulus_offset_ms": 78704,
+        "iti_end_ms": 79204
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 39,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 79204,
+        "stimulus_onset_ms": 79712,
+        "response_timestamp_ms": 80112,
+        "deadline_ms": 81712,
+        "stimulus_offset_ms": 80128,
+        "iti_end_ms": 80628
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 40,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "f",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 80628,
+        "stimulus_onset_ms": 81136,
+        "response_timestamp_ms": 81536,
+        "deadline_ms": 83136,
+        "stimulus_offset_ms": 81552,
+        "iti_end_ms": 82052
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 41,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "GREEN",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 82052,
+        "stimulus_onset_ms": 82560,
+        "response_timestamp_ms": 82960,
+        "deadline_ms": 84560,
+        "stimulus_offset_ms": 82976,
+        "iti_end_ms": 83476
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 42,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "HOUSE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 83476,
+        "stimulus_onset_ms": 83984,
+        "response_timestamp_ms": null,
+        "deadline_ms": 85984,
+        "stimulus_offset_ms": 86000,
+        "iti_end_ms": 86500
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 43,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 86500,
+        "stimulus_onset_ms": 87008,
+        "response_timestamp_ms": 87408,
+        "deadline_ms": 89008,
+        "stimulus_offset_ms": 87424,
+        "iti_end_ms": 87924
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 44,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 87924,
+        "stimulus_onset_ms": 88432,
+        "response_timestamp_ms": 88832,
+        "deadline_ms": 90432,
+        "stimulus_offset_ms": 88848,
+        "iti_end_ms": 89348
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 45,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "MUSIC",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "f",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 89348,
+        "stimulus_onset_ms": 89856,
+        "response_timestamp_ms": 90256,
+        "deadline_ms": 91856,
+        "stimulus_offset_ms": 90272,
+        "iti_end_ms": 90772
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 46,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "BOOK",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 90772,
+        "stimulus_onset_ms": 91280,
+        "response_timestamp_ms": 91680,
+        "deadline_ms": 93280,
+        "stimulus_offset_ms": 91696,
+        "iti_end_ms": 92196
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 47,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "CHAIR",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 92196,
+        "stimulus_onset_ms": 92704,
+        "response_timestamp_ms": 93104,
+        "deadline_ms": 94704,
+        "stimulus_offset_ms": 93120,
+        "iti_end_ms": 93620
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 48,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 93620,
+        "stimulus_onset_ms": 94128,
+        "response_timestamp_ms": 94528,
+        "deadline_ms": 96128,
+        "stimulus_offset_ms": 94544,
+        "iti_end_ms": 95044
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 49,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 95044,
+        "stimulus_onset_ms": 95552,
+        "response_timestamp_ms": null,
+        "deadline_ms": 97552,
+        "stimulus_offset_ms": 97568,
+        "iti_end_ms": 98068
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 50,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "d",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 98068,
+        "stimulus_onset_ms": 98576,
+        "response_timestamp_ms": 98976,
+        "deadline_ms": 100576,
+        "stimulus_offset_ms": 98992,
+        "iti_end_ms": 99492
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 51,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "BOOK",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 99492,
+        "stimulus_onset_ms": 100000,
+        "response_timestamp_ms": 100400,
+        "deadline_ms": 102000,
+        "stimulus_offset_ms": 100416,
+        "iti_end_ms": 100916
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 52,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 100916,
+        "stimulus_onset_ms": 101424,
+        "response_timestamp_ms": 101824,
+        "deadline_ms": 103424,
+        "stimulus_offset_ms": 101840,
+        "iti_end_ms": 102340
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 53,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "HOUSE",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "k",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 102340,
+        "stimulus_onset_ms": 102848,
+        "response_timestamp_ms": 103248,
+        "deadline_ms": 104848,
+        "stimulus_offset_ms": 103264,
+        "iti_end_ms": 103764
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 54,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "RED",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": "j",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 103764,
+        "stimulus_onset_ms": 104272,
+        "response_timestamp_ms": 104672,
+        "deadline_ms": 106272,
+        "stimulus_offset_ms": 104688,
+        "iti_end_ms": 105188
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 55,
+      "condition": "incongruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "f",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 105188,
+        "stimulus_onset_ms": 105696,
+        "response_timestamp_ms": 106096,
+        "deadline_ms": 107696,
+        "stimulus_offset_ms": 106112,
+        "iti_end_ms": 106612
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 56,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "MUSIC",
+        "ink_color": "green"
+      },
+      "correct_response": "j",
+      "response_key": null,
+      "outcome": "timeout",
+      "invalid_reason": null,
+      "reaction_time_ms": null,
+      "timing": {
+        "fixation_onset_ms": 106612,
+        "stimulus_onset_ms": 107120,
+        "response_timestamp_ms": null,
+        "deadline_ms": 109120,
+        "stimulus_offset_ms": 109136,
+        "iti_end_ms": 109636
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 57,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "TABLE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 109636,
+        "stimulus_onset_ms": 110144,
+        "response_timestamp_ms": 110544,
+        "deadline_ms": 112144,
+        "stimulus_offset_ms": 110560,
+        "iti_end_ms": 111060
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 58,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "BLUE",
+        "ink_color": "blue"
+      },
+      "correct_response": "f",
+      "response_key": "f",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 111060,
+        "stimulus_onset_ms": 111568,
+        "response_timestamp_ms": 111968,
+        "deadline_ms": 113568,
+        "stimulus_offset_ms": 111984,
+        "iti_end_ms": 112484
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 59,
+      "condition": "neutral",
+      "stimulus": {
+        "word": "BOOK",
+        "ink_color": "red"
+      },
+      "correct_response": "d",
+      "response_key": "d",
+      "outcome": "correct",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 112484,
+        "stimulus_onset_ms": 112992,
+        "response_timestamp_ms": 113392,
+        "deadline_ms": 114992,
+        "stimulus_offset_ms": 113408,
+        "iti_end_ms": 113908
+      }
+    },
+    {
+      "phase": "main",
+      "trial_index": 60,
+      "condition": "congruent",
+      "stimulus": {
+        "word": "YELLOW",
+        "ink_color": "yellow"
+      },
+      "correct_response": "k",
+      "response_key": "d",
+      "outcome": "incorrect",
+      "invalid_reason": null,
+      "reaction_time_ms": 400,
+      "timing": {
+        "fixation_onset_ms": 113908,
+        "stimulus_onset_ms": 114416,
+        "response_timestamp_ms": 114816,
+        "deadline_ms": 116416,
+        "stimulus_offset_ms": 114832,
+        "iti_end_ms": 115332
+      }
+    }
+  ]
+}

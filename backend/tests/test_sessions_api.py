@@ -72,24 +72,35 @@ def test_read_back_round_trips_every_stored_value(client: TestClient, experiment
     assert "participant_id" not in stored
 
 
-def test_incomplete_session_with_a_prefix_of_trials_is_accepted(
-    client: TestClient, db: Session
+@pytest.mark.parametrize(
+    "payload",
+    [
+        session_payload("flanker", status="incomplete", main_recorded=17),
+        session_payload("stroop", status="interrupted", practice_recorded=5, main_recorded=0),
+        technical_error_payload(),
+    ],
+    ids=["incomplete", "interrupted", "technical_error"],
+)
+def test_only_complete_sessions_can_be_saved(
+    client: TestClient, db: Session, payload: dict[str, Any]
 ) -> None:
-    payload = session_payload("flanker", status="incomplete", main_recorded=17)
+    """Cycle 8 Task 3 policy: non-complete sessions are refused, even when
+    they are otherwise structurally valid (status is the only problem)."""
     response = client.post(URL, json=payload)
-    assert response.status_code == 201, response.text
-    assert response.json()["trials_stored"] == {"practice": 12, "main": 17}
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_session"
+    assert locations(response) == ["status"]
+    assert count_rows(db) == (0, 0)
 
 
-def test_session_that_ended_during_practice_is_accepted(client: TestClient) -> None:
-    payload = session_payload("stroop", status="interrupted", practice_recorded=5, main_recorded=0)
-    assert client.post(URL, json=payload).status_code == 201
-
-
-def test_technical_error_without_a_schedule_is_accepted(client: TestClient) -> None:
-    response = client.post(URL, json=technical_error_payload())
-    assert response.status_code == 201, response.text
-    assert response.json()["trials_stored"] == {"practice": 0, "main": 0}
+def test_plain_text_cross_site_style_post_is_not_stored(client: TestClient, db: Session) -> None:
+    """A browser can send text/plain cross-site without a CORS preflight;
+    such a body must never be parsed and stored."""
+    response = client.post(
+        URL, content=json.dumps(session_payload()), headers={"Content-Type": "text/plain"}
+    )
+    assert response.status_code == 422
+    assert count_rows(db) == (0, 0)
 
 
 # --- Shape validation (layer 1) ---------------------------------------------

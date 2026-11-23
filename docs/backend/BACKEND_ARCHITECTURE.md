@@ -1,7 +1,11 @@
 # HUMAN BENCHMARK — Backend Architecture (Cycle 8, Tasks 1+2)
 
-**Status:** Tasks 1+2 implemented, awaiting project-owner review. Cycle 8 Task 3
-(frontend integration) has **not** started.
+**Status:**
+- Tasks 1+2 are implemented.
+- Tasks 3+4 are implemented and audited, awaiting project-owner review.
+- Frontend saving is a **local development and test flow only**, under a
+  **provisional, unapproved** notice (frontend/PERSISTENCE_INTEGRATION.md).
+- Cycle 8 is not approved, and the backend is not deployable (§9).
 
 Related documents:
 - [ADR-001: backend stack](../decisions/ADR-001-backend-stack.md);
@@ -13,9 +17,10 @@ Related documents:
 
 | Implemented in Tasks 1+2 | Deferred |
 | --- | --- |
-| FastAPI app, typed configuration, SQLite connection management | Any frontend call to the backend (Task 3) |
-| Schema: `participants`, `sessions`, `trials`, with Alembic migration `0001` | Consent and notice UI, the save opt-in flow (Task 3) |
-| Validation: request shape, protocol rules and database constraints | Participant endpoints and ownership proof for reading or deleting (Task 3, before any deployment) |
+| FastAPI app, typed configuration, SQLite connection management | An approved consent notice and real participant collection |
+| Schema: `participants`, `sessions`, `trials`, with Alembic migration `0001` | Participant endpoints and ownership proof for reading or deleting (Cycle 9, before any deployment) |
+| Validation: request shape, protocol rules and database constraints | Participant-facing viewing and deletion |
+| **Task 3:** frontend save panel (opt-in, consent, safe retry), mapping, complete-only rule | |
 | `GET /api/v1/health` | Retention purge job (decision in DATA_AND_PRIVACY.md §6) |
 | `POST /api/v1/sessions` (atomic session + trials) | Live PostgreSQL run, deployment, HTTPS, rate limiting (Cycle 10) |
 | `GET` and `DELETE /api/v1/sessions/{id}` (local development only) | Cycle 9 history queries and summaries |
@@ -38,7 +43,7 @@ flowchart LR
     DB[("SQLite (dev/test)<br/>PostgreSQL (later)<br/>3 DB constraints")]
     API --> Val --> Store --> DB
   end
-  Engine -. "Task 3: participant-initiated save,<br/>only after consent" .-> API
+  Engine -. "Task 3 (implemented, dev only): participant-initiated<br/>save after consent, complete sessions only" .-> API
 ```
 
 **Boundaries:**
@@ -48,7 +53,9 @@ flowchart LR
 - **The backend stores raw records and checks them.** It does not compute
   results, and it does not change, round or "fix" values. Anything that fails a
   check is rejected as a whole.
-- **No frontend file changed in Tasks 1+2.** The dotted arrow is Task 3's job.
+- **The dotted arrow is the only network call** (Task 3): one POST from the
+  results page of a complete session, only after explicit agreement, only in a
+  dev-server build pointed at this computer. It never happens during trials.
 
 ## 3. Directory structure
 
@@ -389,6 +396,6 @@ Not built: dashboards, rankings, norms, recommendations or inference.
 | --- | --- | --- |
 | Task 1 | This design, ADR-001, DATA_AND_PRIVACY.md, API.md | Done |
 | Task 2 | The backend foundation in §3, with tests | Done (awaiting review) |
-| Task 3 (proposed) | Frontend mapping layer, opt-in save, notice and consent UI, participant key and ownership proof, deletion from the UI | Not started |
-| Task 4 (proposed) | End-to-end audit, privacy review, deletion demonstration, PostgreSQL run | Not started |
+| Task 3 | Frontend mapping, opt-in save panel with the provisional notice, safe retry, complete-only rule. Participant key and UI deletion deferred to Cycle 9 | Done (awaiting review) |
+| Task 4 | End-to-end audit: real browser, real API and database, privacy review, development-only deletion demonstrated. Live PostgreSQL run prepared (`HB_TEST_POSTGRES_URL`) but **not run** (needs credentials) | Done (awaiting review) |
 | Cycle 10 | Deployment hardening (§9) | Not started |

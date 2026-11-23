@@ -1,4 +1,5 @@
 import type { ExportColumn } from "../shared/exportTrials";
+import type { ApiStimulus } from "../shared/persistence/sessionPayload";
 import type { ResultsCopy } from "../shared/resultsFormat";
 import {
   FLANKER_SYMBOLS,
@@ -66,3 +67,15 @@ export const FLANKER_EXPORT_COLUMNS: readonly ExportColumn<FlankerStimulus>[] =
       value: (record) => record.stimulus.flankerType,
     },
   ];
+
+/**
+ * Stimulus attributes sent when a session is saved (backend FlankerStimulus):
+ * target direction, flanker type, and the five symbols as shown.
+ */
+export function flankerStimulusToApi(stimulus: FlankerStimulus): ApiStimulus {
+  return {
+    target_direction: stimulus.targetDirection,
+    flanker_type: stimulus.flankerType,
+    symbols: stimulus.text,
+  };
+}

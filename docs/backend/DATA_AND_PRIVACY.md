@@ -1,11 +1,17 @@
 # HUMAN BENCHMARK — Persistence Data and Privacy Policy (Cycle 8, Task 1)
 
-**Status:**
+**Status (Cycle 8 Tasks 3+4, awaiting review):**
 - **Decisions D1–D8** are implemented by the backend foundation.
-- **Recommendations R1–R7** are for Cycle 8 Task 3 and need project-owner
-  approval.
-- **No participant data is collected yet.** The frontend does not call the
-  backend.
+- **Implemented in Task 3:**
+  - R1 (opt-in per session);
+  - R2 (notice allowlist);
+  - R3, narrowed to complete sessions only.
+- **R4–R7 remain recommendations.** In particular, no participant-facing
+  deletion and no retention limit exist yet.
+- **No approved collection.** Saving exists only as a local development and
+  test flow (frontend/PERSISTENCE_INTEGRATION.md), under the **provisional,
+  unapproved** notice `HB-NOTICE-0.1-PROVISIONAL`. It must not be used for real
+  participants.
 
 This document is a project design document, not legal advice. Before real
 participants' data is stored, it needs a privacy review appropriate to the
@@ -69,7 +75,11 @@ Even without identifiers, session data is **behavioral data**, and RT patterns a
 not treated as harmless. Pseudonymous data can still be personal data under laws
 such as the GDPR when it can be linked to a person. That is why R1–R7 exist.
 
-## 4. Pseudonymous participant identifier (design for Task 3; not implemented)
+## 4. Pseudonymous participant identifier (deferred to Cycle 9; not implemented)
+
+Task 3 decision: single-session saving does not need a participant key, so
+none was created. Every saved session has `participant_id` NULL and cannot be
+linked to a person later. The design below is input for Cycle 9.
 
 Cycle 9 needs to group one person's sessions without an account.
 
@@ -92,12 +102,14 @@ Cycle 9 needs to group one person's sessions without an account.
 - **Using the participant UUID itself as the secret:** a leaked database would
   then expose every key.
 
-## 5. Consent and notice (recommendations for Task 3)
+## 5. Consent and notice
 
-- **R1, opt-in per session.**
-  - After results are shown, offer "Save this session" with a short notice (what
-    is stored, why, how long, how to delete).
-  - The default is *not saved*. Results and CSV export keep working without
+- **R1, opt-in per session.** *Implemented (development flow).*
+  - After results are shown, an optional "Save this session" panel gives the
+    notice: what is stored, what is not, where it goes, how long it stays, and
+    that viewing and deletion are not available yet.
+  - Nothing is sent without a ticked agreement and an explicit Save. The
+    default is *not saved*. Results and CSV export keep working without
     saving.
 - **R2, versioned notices.**
   - Each notice text gets an ID (for example `HB-NOTICE-1.0`). The server accepts
@@ -107,21 +119,25 @@ Cycle 9 needs to group one person's sessions without an account.
   - The only listed ID today is **`HB-NOTICE-0.1-PROVISIONAL`**. It is a
     placeholder for local development and tests, marked
     `approved_for_participant_data=False`. **No notice text exists yet, and this
-    ID is not approved for collecting real participant data.** Task 3 writes the
-    notice, gives it a new ID, and lists it after your approval.
+    ID is not approved for collecting real participant data.** The development
+    panel shows its draft text, labeled provisional. Approved text needs a new
+    ID, listed only after your approval.
   - Changing the notice text means a new ID.
-- **R3, which statuses can be saved.** Recommend offering saving for `complete`
-  and `incomplete` sessions only. `interrupted` sessions (page closed) cannot be
-  saved in practice. `technical_error` sessions have little value to the
-  participant. The API accepts all four statuses so the decision stays in the
-  UI.
+- **R3, which statuses can be saved.** *Implemented, narrowed:* only
+  `complete` sessions, the engine's own completion status. The frontend does not
+  offer saving for any other status, and the backend rejects them (422 at
+  `status`). Widening this to `incomplete` would be a later, explicit decision.
+  The backend's structural rules for incomplete sessions remain, ready for it.
 - **R4, age and audience.** The intended audience is adults. Any research use or
   recruitment needs separate consent and oversight (protocols, REQUIREMENTS
   §Risks). Persistence must not be presented as research participation.
 
 ## 6. Retention and deletion
 
-- **R5, deletion by the participant.** In the UI: "Delete this session" and
+- **R5, deletion by the participant.** *Not implemented.* The page offers no
+  viewing or deletion, because session IDs are not authorization credentials,
+  and it says so. Planned for when ownership proof exists (§4): "Delete this
+  session" and
   "Delete all my saved data" (a participant-level cascade). Both are hard
   deletes, and the UI should confirm them. The UI must say that copies already
   downloaded as CSV are outside the platform's control (FR-PRI-03).
