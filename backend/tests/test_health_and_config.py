@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from app.config import DEFAULT_CORS_ORIGINS, Settings
 from app.database import alembic_config
 from app.main import create_app
-from tests.conftest import migrate, sqlite_url
+from tests.conftest import local_client, migrate, sqlite_url
 
 
 def make_settings(**values: object) -> Settings:
@@ -20,7 +20,7 @@ def make_settings(**values: object) -> Settings:
 def health_of(settings: Settings) -> tuple[int, dict[str, str]]:
     app = create_app(settings)
     try:
-        with TestClient(app) as client:
+        with local_client(app) as client:
             response = client.get("/api/v1/health")
         return response.status_code, response.json()
     finally:
@@ -58,14 +58,28 @@ def test_health_reports_an_unreachable_database(tmp_path: Path) -> None:
 
 
 def test_openapi_document_lists_only_the_documented_endpoints(client: TestClient) -> None:
+    # `client` runs with local-owner access enabled in development.
     paths = client.get("/openapi.json").json()["paths"]
     assert set(paths) == {
         "/api/v1/health",
         "/api/v1/sessions",
         "/api/v1/sessions/{session_id}",
     }
-    assert set(paths["/api/v1/sessions"]) == {"post"}
+    assert set(paths["/api/v1/sessions"]) == {"post", "get", "delete"}
     assert set(paths["/api/v1/sessions/{session_id}"]) == {"get", "delete"}
+
+
+def test_without_local_owner_access_only_saving_and_health_exist(tmp_path: Path) -> None:
+    url = sqlite_url(tmp_path / "plain.db")
+    migrate(url)
+    app = create_app(make_settings(database_url=url))  # local_owner_access defaults to off
+    try:
+        with local_client(app) as client:
+            paths = client.get("/openapi.json").json()["paths"]
+    finally:
+        app.state.engine.dispose()
+    assert set(paths) == {"/api/v1/health", "/api/v1/sessions"}
+    assert set(paths["/api/v1/sessions"]) == {"post"}
 
 
 # --- Configuration -----------------------------------------------------------
@@ -78,6 +92,7 @@ def test_defaults_are_local_and_safe() -> None:
     assert settings.cors_origins == DEFAULT_CORS_ORIGINS
     assert settings.database_url.startswith("sqlite:///")
     assert settings.max_request_bytes == 256 * 1024
+    assert settings.local_owner_access is False
 
 
 def test_environment_variables_are_read(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -99,6 +114,7 @@ def test_environment_variables_are_read(monkeypatch: pytest.MonkeyPatch) -> None
         {"database_url": "sqlite://"},
         {"max_request_bytes": 10},
         {"log_level": "TRACE"},
+        {"local_owner_access": "maybe"},
     ],
 )
 def test_unsafe_or_unsupported_settings_fail_at_start_up(values: dict[str, object]) -> None:

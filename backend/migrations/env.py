@@ -10,7 +10,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.config import get_settings
-from app.database import _enable_sqlite_foreign_keys
+from app.database import configure_sqlite_connection
 from app.models import Base
 
 config = context.config
@@ -40,7 +40,7 @@ def run_migrations_online() -> None:
     if connectable.dialect.name == "sqlite":
         from sqlalchemy import event
 
-        event.listen(connectable, "connect", _enable_sqlite_foreign_keys)
+        event.listen(connectable, "connect", configure_sqlite_connection)
     with connectable.connect() as connection:
         context.configure(
             connection=connection,

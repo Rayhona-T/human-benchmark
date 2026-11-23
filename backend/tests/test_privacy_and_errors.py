@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.consent import PROVISIONAL_NOTICE_VERSION
 from app.main import create_app
+from tests.conftest import local_client
 from tests.factories import session_payload
 
 
@@ -35,7 +36,7 @@ def test_unexpected_errors_return_a_generic_500_without_internals(
         raise RuntimeError("secret detail: participant RT 512.25")
 
     app.add_api_route("/api/v1/explode", explode)
-    with TestClient(app, raise_server_exceptions=False) as client:
+    with local_client(app, raise_server_exceptions=False) as client:
         response = client.get("/api/v1/explode")
     app.state.engine.dispose()
 

@@ -195,6 +195,57 @@ class SessionDetail(BaseModel):
     trials: list[TrialOut]
 
 
+# --- Local-owner session history (Cycle 9, Task 9.2) --------------------------
+
+DEFAULT_PAGE_SIZE = 20
+MAX_PAGE_SIZE = 100
+MAX_CURSOR_LENGTH = 128
+DELETE_ALL_CONFIRMATION = "delete-all-local-sessions"
+
+
+class SessionListQuery(BaseModel):
+    """Query string of GET /api/v1/sessions. Unknown parameters are rejected."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    experiment_id: ExperimentIdValue | None = None
+    limit: int = Field(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE)
+    cursor: str | None = Field(default=None, min_length=1, max_length=MAX_CURSOR_LENGTH)
+
+
+class SessionSummary(BaseModel):
+    """One history entry. Deliberately no trial-level data, schedule, seed,
+    allocation details, client_session_id or participant_id. The analysis
+    version is not stored (results are recomputed in the frontend, D8)."""
+
+    session_id: UUID
+    data_schema_version: int
+    experiment_id: str
+    protocol_id: str
+    protocol_version: str
+    configuration_id: str
+    configuration_version: str
+    status: str
+    consent_notice_version: str
+    created_at: datetime
+    trial_counts: TrialCounts
+
+
+class SessionPage(BaseModel):
+    sessions: list[SessionSummary]
+    # Pass as `cursor` to get the next (older) page; null on the last page.
+    next_cursor: str | None
+
+
+class DeleteAllConfirmation(StrictModel):
+    confirm: Literal["delete-all-local-sessions"]
+
+
+class DeleteAllResult(BaseModel):
+    deleted_sessions: int
+    deleted_trials: int
+
+
 class HealthOut(BaseModel):
     status: Literal["ok", "unavailable"]
     api_version: Literal["v1"]

@@ -14,9 +14,11 @@ and password made only for testing.
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from alembic import command
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine
 from sqlalchemy.engine import make_url
@@ -80,16 +82,30 @@ def database_url(tmp_path: Path) -> str:
     return url
 
 
+# TestClient sends Host "testserver" by default, which TrustedHostMiddleware
+# rejects. Every test client uses a trusted local host instead.
+BASE_URL = "http://localhost"
+
+
+def local_client(app: FastAPI, **kwargs: Any) -> TestClient:
+    return TestClient(app, base_url=BASE_URL, **kwargs)
+
+
 @pytest.fixture
 def settings(database_url: str) -> Settings:
+    # The default test app is the full development app with local-owner
+    # access on, so read-back tests can use GET. Tests of the disabled state
+    # build their own settings (tests/test_local_owner_scope.py).
     # _env_file=None: never pick up a developer's backend/.env during tests.
-    return Settings(env="test", database_url=database_url, _env_file=None)
+    return Settings(
+        env="development", local_owner_access=True, database_url=database_url, _env_file=None
+    )
 
 
 @pytest.fixture
 def client(settings: Settings) -> Iterator[TestClient]:
     app = create_app(settings)
-    with TestClient(app) as test_client:
+    with local_client(app) as test_client:
         yield test_client
     app.state.engine.dispose()
 

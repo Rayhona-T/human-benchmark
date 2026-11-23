@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # Only local environments exist until the deployment blockers in
     # docs/backend/BACKEND_ARCHITECTURE.md §9 are resolved.
     env: Literal["development", "test"] = "development"
+    # Cycle 9 local-owner access (list, read and delete stored sessions).
+    # Off unless explicitly turned on, and effective only when env is
+    # "development" (app/scope.py). HB_ENV defaults to "development", so the
+    # environment alone cannot fail closed when configuration is missing.
+    local_owner_access: bool = False
     database_url: str = DEFAULT_DATABASE_URL
     cors_origins: Annotated[tuple[str, ...], NoDecode] = DEFAULT_CORS_ORIGINS
     max_request_bytes: int = Field(default=256 * 1024, ge=1024, le=2 * 1024 * 1024)

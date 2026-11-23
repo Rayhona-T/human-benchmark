@@ -1,4 +1,4 @@
-# HUMAN BENCHMARK — API Reference (v1, Cycle 8 foundation)
+# HUMAN BENCHMARK — API Reference (v1: Cycle 8 saving, Cycle 9 local-owner access)
 
 - **Base URL (local):** `http://127.0.0.1:8000/api/v1`
 - **Interactive documentation:** `http://127.0.0.1:8000/docs` (generated from the
@@ -11,8 +11,52 @@
   - The consent notice accepted today (`HB-NOTICE-0.1-PROVISIONAL`) is
     **provisional and not approved** for real participant data.
 
-GET and DELETE are for local development only, because they have no ownership
-proof (BACKEND_ARCHITECTURE.md §9). The frontend never calls them.
+## Access model
+
+| Endpoint | Available |
+| --- | --- |
+| `GET /health`, `POST /sessions` | Always (local server) |
+| `GET /sessions`, `DELETE /sessions`, `GET /sessions/{id}`, `DELETE /sessions/{id}` | **Only** when `HB_ENV=development` **and** `HB_LOCAL_OWNER_ACCESS=true` (local-owner scope) |
+
+- **Local-owner scope** is "every session in this database". It is **not
+  ownership proof**: anyone who can reach the server on this computer can read
+  and delete everything (DATA_AND_PRIVACY.md §8.1).
+- **Fail closed.** `HB_LOCAL_OWNER_ACCESS` defaults to off. When the scope is
+  not enabled, these four routes are not registered at all: `GET` and `DELETE
+  /sessions` answer **405**, and `/sessions/{id}` answers **404**.
+- **Second check.** Every one of them depends on one scope function
+  (`app/scope.py`). It re-reads the live settings and answers **403
+  `local_owner_access_disabled`** if they no longer allow it. That check runs
+  before the path or body is validated.
+- **Caller:** the development-only Observatory UI (Task 9.4,
+  frontend/OBSERVATORY_UI.md), through the validated client of Task 9.3.
+
+## Host header (all endpoints)
+
+Every request must carry a `Host` of `localhost` or `127.0.0.1`, on any port and
+in any letter case. Anything else gets **400** with the plain-text body
+`Invalid host header`, before routing, CORS or validation.
+
+This is Starlette's built-in `TrustedHostMiddleware`, with `www_redirect` off. It
+blocks **DNS rebinding**: a hostile page whose own domain has been re-pointed to
+`127.0.0.1` still sends its own name as `Host`.
+
+Rejected, among others (each tested):
+- other names: `evil.example`, `127.0.0.1.nip.io`, `localhost.evil.example`,
+  `sub.localhost`;
+- the trailing-dot form `localhost.`;
+- other loopback addresses (`127.0.0.2`, `[::1]`), and `0.0.0.0`;
+- malformed ports (`localhost:abc`);
+- user-info tricks (`localhost@evil.example`);
+- an empty or missing `Host`.
+
+Checked live against Uvicorn on 2026-11-23, with raw HTTP requests on a scratch
+database. Everything above behaved as described. A missing `Host`, and two `Host`
+headers in either order, were refused by Uvicorn's HTTP parser before reaching
+the app.
+
+The rejection body is plain text, not the JSON error envelope, because it comes
+from the built-in middleware.
 
 ## Conventions
 
@@ -56,11 +100,13 @@ Every error uses one envelope:
 
 | HTTP | `code` | Meaning |
 | --- | --- | --- |
+| 400 | (plain text `Invalid host header`) | Untrusted or malformed `Host` (see above) |
+| 403 | `local_owner_access_disabled` | Local-owner scope not enabled on this server |
 | 404 | `not_found` | Unknown session ID or route |
 | 405 | `method_not_allowed` | Method not supported on that route |
 | 409 | `duplicate_session` | This `client_session_id` is already stored |
 | 413 | `payload_too_large` | Body over the size limit |
-| 422 | `invalid_request` | Malformed JSON, wrong type, unknown or missing field, out-of-range value |
+| 422 | `invalid_request` | Malformed JSON, wrong type, unknown or missing field, out-of-range value, invalid query parameter or cursor |
 | 422 | `invalid_session` | Well-formed, but breaks a protocol or consistency rule |
 | 500 | `internal_error` | Unexpected server error |
 | 503 | (health body) | Database unreachable or not migrated |
@@ -216,7 +262,88 @@ Errors: 409, 413 and 422, as above.
 
 ---
 
-## `GET /api/v1/sessions/{session_id}` (local development only)
+## `GET /api/v1/sessions` (local-owner scope)
+
+Lists stored sessions as **summaries**, newest first.
+
+**Query parameters.** Unknown parameters are rejected (422).
+
+| Name | Type | Default | Rule |
+| --- | --- | --- | --- |
+| `experiment_id` | `stroop` or `flanker` | all | exact, lowercase |
+| `limit` | integer | `20` | 1 to 100 |
+| `cursor` | string | none | exactly a `next_cursor` from an earlier response (at most 128 characters) |
+
+**Order.** By `created_at` descending, then `session_id` descending. The order is
+total, so sessions that share a timestamp are neither repeated nor skipped
+across pages.
+
+**Pagination** uses keyset cursors.
+- `next_cursor` is `null` on the last page.
+- The cursor is opaque: it encodes the last entry's `created_at` and
+  `session_id`. It is not signed. A crafted cursor can only pick a different
+  page inside the same scope.
+- A cursor stays usable even if its session has since been deleted.
+- An invalid cursor gets 422 with location `query.cursor`.
+
+**200 OK:**
+```json
+{
+  "sessions": [
+    {
+      "session_id": "…",
+      "data_schema_version": 1,
+      "experiment_id": "flanker",
+      "protocol_id": "…",
+      "protocol_version": "…",
+      "configuration_id": "…",
+      "configuration_version": "…",
+      "status": "complete",
+      "consent_notice_version": "HB-NOTICE-0.1-PROVISIONAL",
+      "created_at": "2026-11-22T20:29:01.201217Z",
+      "trial_counts": { "practice": 12, "main": 60 }
+    }
+  ],
+  "next_cursor": null
+}
+```
+
+- **Not in a summary, by design:** trials, stimuli, responses, reaction times,
+  the schedule, seed and allocation details, break data, `client_session_id`,
+  `participant_id`. Use `GET /sessions/{id}` for a session's data.
+- **No analysis version:** results are not stored (D8). The frontend recomputes
+  them with its own analysis version.
+
+Errors: 403, 422.
+
+## `DELETE /api/v1/sessions` (local-owner scope): delete all
+
+**Permanently deletes every session in scope**, and through the database cascade
+all of their trials, in one transaction. There is no undo.
+
+The body must be **exactly**:
+```json
+{ "confirm": "delete-all-local-sessions" }
+```
+- It must be JSON (`Content-Type: application/json`).
+- The value is exact and case-sensitive.
+- Extra fields are rejected.
+- **Any query string is rejected** (422, location `query`). There is no filtered
+  delete, and ignoring `?experiment_id=` would delete more than was asked.
+
+Anything else gets 422 `invalid_request`, and nothing is deleted.
+
+**200 OK** (also when nothing was stored):
+```json
+{ "deleted_sessions": 3, "deleted_trials": 216 }
+```
+
+Participant rows are not deleted. None are created today, and they hold no
+session data.
+
+Errors: 403, 413, 422.
+
+## `GET /api/v1/sessions/{session_id}` (local-owner scope)
 
 Returns the stored session. The body has the request's fields (without
 `client_session_id` and `consent`), plus:
@@ -226,20 +353,30 @@ Returns the stored session. The body has the request's fields (without
 
 Trials are ordered practice first, then by index.
 
-Errors: 404 for an unknown ID, 422 for a malformed UUID.
+Errors: 403, 404 for an unknown ID, 422 for a malformed UUID.
 
-## `DELETE /api/v1/sessions/{session_id}` (local development only)
+## `DELETE /api/v1/sessions/{session_id}` (local-owner scope)
 
 **Permanently deletes** the session and, through the database cascade, all of its
 trials. There is no undo and no soft delete.
 
-**204 No Content.** Errors: 404, 422.
+**204 No Content.** Errors: 403, 404, 422.
+
+### Deletion and SQLite
+
+Every SQLite connection sets `PRAGMA secure_delete=ON`, so deleted rows are
+overwritten with zeros inside the database file (tested). That is **not**
+guaranteed erasure. Copies outside the file are not reached
+(DATA_AND_PRIVACY.md §8.2).
 
 ---
 
 ## Not provided (deliberately)
 
-- **Session listing or search** (Cycle 9, with ownership proof).
+- **Ownership proof** (participant key or account). The local-owner scope above
+  is the only scope, and it is development-only. Ownership proof is required
+  before any deployment (BACKEND_ARCHITECTURE.md §9).
+- **Search, other sort orders, or filtered deletion.**
 - **Participant endpoints** (deferred to Cycle 9; DATA_AND_PRIVACY.md §4).
 - **Updates (`PUT`/`PATCH`).** Stored sessions are immutable records; a
   correction is a delete plus a new save.

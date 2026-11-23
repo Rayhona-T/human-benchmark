@@ -41,11 +41,16 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 7 — Analysis & Results | In progress — Task 1+2 complete; Task 3+4 complete, awaiting human approval |
 | Cycle 7 — Task 1+2: Scientific Analysis Framework, Results Methodology & Architecture | Complete — decisions approved for implementation (`HB-ANALYSIS-1.1`) |
 | Cycle 7 — Task 3+4: Participant Results Experience, Scientific Audit & Approval Readiness | Complete — awaiting human approval |
-| Cycle 8 — Backend & Persistence | In progress — Tasks 1–4 complete, awaiting human review and approval (not approved) |
-| Cycle 8 — Tasks 1+2: Backend Architecture, Data Policy & Foundation | Complete — awaiting human review ([BACKEND_ARCHITECTURE.md](backend/BACKEND_ARCHITECTURE.md), [DATA_AND_PRIVACY.md](backend/DATA_AND_PRIVACY.md), [API.md](backend/API.md), [ADR-001](decisions/ADR-001-backend-stack.md)) |
-| Cycle 8 — Task 3: Experiment persistence integration | Complete — awaiting human review. Local development and test flow only, under the provisional, unapproved notice `HB-NOTICE-0.1-PROVISIONAL`; not approved for real participant data ([PERSISTENCE_INTEGRATION.md](../frontend/PERSISTENCE_INTEGRATION.md)). Participant key and participant-facing deletion deferred to Cycle 9 |
-| Cycle 8 — Task 4: End-to-end audit & approval readiness | Complete — awaiting human review and manual browser check. Live PostgreSQL run not performed (prepared; needs credentials) |
-| Cycle 9 — Personal Observatory | Planned — not started |
+| Cycle 8 — Backend & Persistence | Complete — checkpoint committed (`a68b3b4`), approved with conditions: local development and test use only under the provisional, unapproved notice `HB-NOTICE-0.1-PROVISIONAL` (no real participant data); live PostgreSQL run still not performed; development database to be moved outside OneDrive before more sessions are saved |
+| Cycle 8 — Tasks 1+2: Backend Architecture, Data Policy & Foundation | Complete — approved with the Cycle 8 conditions ([BACKEND_ARCHITECTURE.md](backend/BACKEND_ARCHITECTURE.md), [DATA_AND_PRIVACY.md](backend/DATA_AND_PRIVACY.md), [API.md](backend/API.md), [ADR-001](decisions/ADR-001-backend-stack.md)) |
+| Cycle 8 — Task 3: Experiment persistence integration | Complete — approved with the Cycle 8 conditions. Local development and test flow only, under the provisional, unapproved notice `HB-NOTICE-0.1-PROVISIONAL`; not approved for real participant data ([PERSISTENCE_INTEGRATION.md](../frontend/PERSISTENCE_INTEGRATION.md)), including the consent-incident fix. Participant key deferred beyond the Cycle 9 MVP |
+| Cycle 8 — Task 4: End-to-end audit & approval readiness | Complete — approved with the Cycle 8 conditions. Live PostgreSQL run not performed (prepared; needs credentials) |
+| Cycle 9 — Personal Observatory | In progress — Tasks 9.1–9.3 approved; Task 9.4 approved with conditions; Task 9.5 (trends) complete, awaiting review. Development-only, local-only ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md)) |
+| Cycle 9 — Task 9.1: Decisions, requirements & privacy documentation | Approved. Owner action outstanding: move the database outside OneDrive before saving more sessions |
+| Cycle 9 — Task 9.2: Backend reads & deletion (Host allowlist, session list, delete-all) | Approved (mypy limitation documented). Local-owner access is development-only and off unless `HB_LOCAL_OWNER_ACCESS=true`; notice 0.2 not active ([API.md](backend/API.md)) |
+| Cycle 9 — Task 9.3: Frontend data layer (stored-session adapter, type-only analysis input narrowing) | Approved. Identical results for all four fixtures ([OBSERVATORY_DATA_LAYER.md](../frontend/OBSERVATORY_DATA_LAYER.md)) |
+| Cycle 9 — Task 9.4: History, session detail & deletion UI (MVP) | Approved with conditions. Development builds with a local test backend only; absent from production builds; notice 0.2 updated but not activated ([OBSERVATORY_UI.md](../frontend/OBSERVATORY_UI.md)) |
+| Cycle 9 — Task 9.5: Within-experiment session trends | Complete — awaiting review. Descriptive only: comparable sessions, ≥3 for charts, ≥5 earlier sessions for a range, no inference ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md) §4a) |
 | Cycle 10 — Testing, Pilot & Deployment | Planned — not started |
 | Application product implementation | Not started |
 
@@ -131,6 +136,37 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 - **Dependencies:** Phase 7 persistence or a separately reviewed local-storage design; explicit privacy and retention decisions.
 - **Exit criteria:** Comparable sessions are identified transparently; version and quality differences are explained; deletion and export remain understandable; no stable-trait or diagnostic inference is made.
 - **Not included yet:** Leaderboards, population norms, predictive scoring, automatic psychological profiling.
+
+### Cycle 9 approved scope (Task 9.1)
+
+The full decisions (O1–O12), display safeguards and deferred features are in
+[PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md). The privacy model is in
+[DATA_AND_PRIVACY.md](backend/DATA_AND_PRIVACY.md) §8.
+
+- **Ownership:** local-owner mode. Whoever runs the local backend owns all of
+  its sessions. There is no participant key, and this is not ownership proof.
+- **Availability:** development-only and local-only, behind the same gate as
+  saving. Not part of production builds, and no deployment.
+- **Database:** moved outside OneDrive by the owner before more sessions are
+  saved (backend/README.md, "Database location").
+- **MVP:** session history, details of one session (recalculated with
+  `HB-ANALYSIS-1.1`), and manual deletion of one or all sessions.
+- **After the MVP:**
+  - within-experiment trends, which need at least 3 comparable sessions;
+  - an earlier-session range, which needs at least 5 comparable earlier
+    sessions.
+- **Excluded:** trend lines, smoothing, significance tests, confidence
+  intervals, automatic insights, rankings, cross-experiment comparisons and
+  device tracking.
+- **Deferred:**
+  - automatic retention;
+  - participant key, which is required before deployment;
+  - export from stored sessions.
+- **Notice:** `HB-NOTICE-0.2-PROVISIONAL` is drafted, not active, and not
+  approved for real participants ([CONSENT_NOTICES.md](backend/CONSENT_NOTICES.md)).
+- **Task sequence:** 9.1 documentation → 9.2 backend reads and deletion → 9.3
+  frontend data layer → 9.4 MVP UI → MVP review → 9.5 trends. Each task needs
+  approval of the previous one.
 
 ## Phase 9 — Quality and Pilot
 

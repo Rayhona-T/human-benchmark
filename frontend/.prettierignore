@@ -2,3 +2,7 @@
 # and compared byte for byte; a backend test posts them to the real API.
 # Reformatting them would break that comparison.
 src/experiments/shared/persistence/__fixtures__/
+
+# Real backend responses recorded by scripts/generate_observatory_fixtures.py;
+# kept exactly as the backend returned them (regenerate, do not hand-edit).
+src/experiments/shared/observatory/__fixtures__/

@@ -181,9 +181,13 @@ Saving is offered only when **all** of these are true. The rules are enforced in
    (`npm run build`) never offers saving, whatever its configuration.
 2. **`VITE_HB_LOCAL_SAVE_API` is set**, for example
    `http://127.0.0.1:8000`.
-3. **That address is this computer:** `127.0.0.1`, `localhost` or `[::1]`, a plain
-   origin, with no credentials, path or query. Any other address disables
-   saving, so configuration cannot send data to another machine.
+3. **That address is this computer, in a form the backend accepts:**
+   `http://127.0.0.1[:port]` or `http://localhost[:port]`, a plain origin with
+   no credentials, path or query. Any other address disables saving, so
+   configuration cannot send data to another machine. Since Cycle 9 Task 9.4,
+   `[::1]` and `https:` are refused, because the backend's Host allowlist and
+   plain-HTTP server would reject them; the rule is shared with the
+   Observatory (`src/experiments/shared/localApi.ts`).
 
 ```powershell
 # Terminal 1: backend (see backend/README.md for first-time setup)
@@ -227,7 +231,9 @@ that viewing and deleting are not available yet.
 
 In this development setup, a saved session stays in the local database file
 until the person running the server deletes it. They can do that with the
-development `DELETE` endpoint (`/docs`), or by deleting `human_benchmark.db`.
+development `DELETE` endpoints (`/docs`), or by deleting the database file.
+Since Cycle 9 Task 9.2, those endpoints exist only when the backend runs with
+`HB_LOCAL_OWNER_ACCESS=true` in development (backend/README.md).
 There is no automatic retention limit yet (DATA_AND_PRIVACY.md R6).
 
 ## 8. Scientific integrity

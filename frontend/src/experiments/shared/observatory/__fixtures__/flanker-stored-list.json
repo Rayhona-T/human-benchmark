@@ -1,0 +1,21 @@
+{
+  "sessions": [
+    {
+      "session_id": "ff0f8fb4-a332-43f0-893a-3dd6d9000525",
+      "data_schema_version": 1,
+      "experiment_id": "flanker",
+      "protocol_id": "HB-FLANKER-1.0",
+      "protocol_version": "1.0",
+      "configuration_id": "HB-FLANKER-1.0",
+      "configuration_version": "1.0",
+      "status": "complete",
+      "consent_notice_version": "HB-NOTICE-0.1-PROVISIONAL",
+      "created_at": "2026-11-23T08:01:46.981103Z",
+      "trial_counts": {
+        "practice": 12,
+        "main": 60
+      }
+    }
+  ],
+  "next_cursor": null
+}

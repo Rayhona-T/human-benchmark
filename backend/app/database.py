@@ -30,15 +30,21 @@ def create_db_engine(database_url: str) -> Engine:
         pool_pre_ping=True,
     )
     if engine.dialect.name == "sqlite":
-        event.listen(engine, "connect", _enable_sqlite_foreign_keys)
+        event.listen(engine, "connect", configure_sqlite_connection)
     return engine
 
 
-def _enable_sqlite_foreign_keys(dbapi_connection: Any, _record: Any) -> None:
+def configure_sqlite_connection(dbapi_connection: Any, _record: Any) -> None:
+    """Per-connection SQLite settings, applied to every new connection
+    (app engine and migrations alike)."""
+    cursor = dbapi_connection.cursor()
     # SQLite ignores FOREIGN KEY constraints (including ON DELETE CASCADE)
     # unless this is switched on for every new connection.
-    cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    # Overwrite deleted content with zeros inside the database file instead
+    # of leaving it in free pages. Limits (journal files, backups, synced
+    # copies, the disk itself): docs/backend/DATA_AND_PRIVACY.md section 8.2.
+    cursor.execute("PRAGMA secure_delete=ON")
     cursor.close()
 
 

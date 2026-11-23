@@ -9,13 +9,13 @@ Nothing here is a validated psychological measure.
 
 ## 1. Layers
 
-| Layer                  | Where                                                               | Rule                                                                                           |
-| ---------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Raw records            | Engine `TrialRecord`s from the session                              | Never modified, inferred, or completed by analysis                                             |
-| Calculations           | `shared/sessionAnalysis.ts` (`computeSessionResults`)               | Pure, deterministic, no React, no wording                                                      |
-| Experiment definitions | `stroopAnalysis.ts`, `flankerAnalysis.ts`                           | Conditions, the protocol §10 contrast table, counts, and the RT rule, taken from each protocol |
-| Interpretation         | `shared/resultsFormat.ts` (sentences), `speedAccuracyPattern`       | Describes "this session" only                                                                  |
-| Presentation           | `shared/SessionResults.tsx` with experiment wording (`ResultsCopy`) | Shows only what calculations return                                                            |
+| Layer                  | Where                                                                                                                                    | Rule                                                                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Raw records            | Engine `TrialRecord`s from the session, or stored trials reloaded through the Observatory adapter (Cycle 9; `OBSERVATORY_DATA_LAYER.md`) | Never modified, inferred, or completed by analysis. The analysis reads only `AnalysableTrial` fields: `phase`, `trialIndex`, `condition`, `outcome`, `timing.reactionTimeMs` (type-only narrowing, Task 9.3) |
+| Calculations           | `shared/sessionAnalysis.ts` (`computeSessionResults`)                                                                                    | Pure, deterministic, no React, no wording                                                                                                                                                                    |
+| Experiment definitions | `stroopAnalysis.ts`, `flankerAnalysis.ts`                                                                                                | Conditions, the protocol §10 contrast table, counts, and the RT rule, taken from each protocol                                                                                                               |
+| Interpretation         | `shared/resultsFormat.ts` (sentences), `speedAccuracyPattern`                                                                            | Describes "this session" only                                                                                                                                                                                |
+| Presentation           | `shared/SessionResults.tsx` with experiment wording (`ResultsCopy`)                                                                      | Shows only what calculations return                                                                                                                                                                          |
 
 ## 2. Metric definitions (main trials only; practice is counted, never analysed)
 
@@ -126,6 +126,10 @@ Display rules:
 
 **Existing Stroop and Flanker suites:** unchanged and passing. They cover
 every metric, denominator, contrast, sign, and label.
+
+## Across sessions (Cycle 9, Task 9.5)
+
+The Personal Observatory's Trends view adds **no calculation**. It shows, session by session, two values this analysis already produces for each session: the median correct RT per condition (only with at least 10 correct responses) and response accuracy per condition (with its own denominator). It never averages, pools or subtracts values across sessions. Comparability, thresholds and the earlier-session range are defined in docs/PERSONAL_OBSERVATORY.md §4a.
 
 ## 8. Approved decisions (implemented in Task 3+4)
 

@@ -23,7 +23,8 @@ Related documents:
 | **Task 3:** frontend save panel (opt-in, consent, safe retry), mapping, complete-only rule | |
 | `GET /api/v1/health` | Retention purge job (decision in DATA_AND_PRIVACY.md §6) |
 | `POST /api/v1/sessions` (atomic session + trials) | Live PostgreSQL run, deployment, HTTPS, rate limiting (Cycle 10) |
-| `GET` and `DELETE /api/v1/sessions/{id}` (local development only) | Cycle 9 history queries and summaries |
+| `GET` and `DELETE /api/v1/sessions/{id}` (local development only) | Observatory UI (Cycle 9 Tasks 9.3–9.4) |
+| **Cycle 9 Task 9.2:** local-owner scope (`app/scope.py`, development + `HB_LOCAL_OWNER_ACCESS=true`), `GET /api/v1/sessions` summaries with keyset pagination, `DELETE /api/v1/sessions` with confirmation, Host allowlist, SQLite `secure_delete` | Ownership proof (participant key) before any deployment |
 | Error envelope, request-size limit, CORS, privacy-safe logging | Server-side analysis |
 | Automated tests (isolated databases) | |
 
@@ -79,7 +80,8 @@ backend/
     schemas.py              Pydantic request and response models (layer 1)
     protocols.py            approved protocol facts per experiment
     validation.py           cross-field and protocol rules (layer 2)
-    session_store.py        transactional create / read / delete
+    session_store.py        transactional create / read / list / delete, keyset cursors
+    scope.py                local-owner scope for every read and delete (Cycle 9)
     errors.py               error envelope and exception handlers
     middleware.py           request-size limit, privacy-safe request log
     routes/health.py, routes/sessions.py
@@ -341,13 +343,28 @@ The **foundation level** is implemented:
   `http://127.0.0.1:5173`). `*` is rejected at start-up, methods are limited to
   GET, POST and DELETE, and there are no credentials;
 - the default bind is `127.0.0.1`;
+- *(Cycle 9 Task 9.2)* **Host allowlist:** Starlette `TrustedHostMiddleware`
+  accepts only `localhost` and `127.0.0.1` on any port. Everything else gets
+  400, which blocks DNS rebinding. It is the outermost check after the request
+  log;
+- *(Cycle 9 Task 9.2)* **Local-owner scope:** every endpoint that reads or
+  deletes stored sessions depends on `require_owner_scope`, and every store
+  query is filtered through `OwnerScope`.
+  - The routes are registered only when `HB_ENV=development` and
+    `HB_LOCAL_OWNER_ACCESS=true`, and the live settings are re-checked on
+    each request.
+  - This is **not** ownership proof. Item 1 below still applies;
+- *(Cycle 9 Task 9.2)* **SQLite `secure_delete=ON`** on every connection.
+  Limits are in DATA_AND_PRIVACY.md §8.2;
 - there are no credentials in code. The database URL comes from the environment
   or `.env`; `.env` and `*.db` files are git-ignored;
 - all queries go through the ORM, which uses bound parameters.
 
 **Before any deployment, all of the following are required** (tracked in §12):
-1. **Ownership proof** for reading and deleting. Today anyone who knows a session
-   UUID can read or delete it; UUIDv4 is unguessable but is not authorization.
+1. **Ownership proof** for reading and deleting. With local-owner access on
+   (development only), anyone who can reach the local server can list, read
+   and delete **every** session. With it off, nothing can be read or deleted
+   through the API.
    - **Recommendation:** a random participant key held only by the browser,
      stored server-side as a hash (DATA_AND_PRIVACY.md §4).
 2. **HTTPS, rate limiting** and abuse protection on `POST`.
@@ -395,7 +412,8 @@ Not built: dashboards, rankings, norms, recommendations or inference.
 | Step | Content | State |
 | --- | --- | --- |
 | Task 1 | This design, ADR-001, DATA_AND_PRIVACY.md, API.md | Done |
-| Task 2 | The backend foundation in §3, with tests | Done (awaiting review) |
-| Task 3 | Frontend mapping, opt-in save panel with the provisional notice, safe retry, complete-only rule. Participant key and UI deletion deferred to Cycle 9 | Done (awaiting review) |
-| Task 4 | End-to-end audit: real browser, real API and database, privacy review, development-only deletion demonstrated. Live PostgreSQL run prepared (`HB_TEST_POSTGRES_URL`) but **not run** (needs credentials) | Done (awaiting review) |
+| Task 2 | The backend foundation in §3, with tests | Done (Cycle 8 approved with conditions) |
+| Task 3 | Frontend mapping, opt-in save panel with the provisional notice, safe retry, complete-only rule. Participant key and UI deletion deferred to Cycle 9 | Done (Cycle 8 approved with conditions) |
+| Task 4 | End-to-end audit: real browser, real API and database, privacy review, development-only deletion demonstrated. Live PostgreSQL run prepared (`HB_TEST_POSTGRES_URL`) but **not run** (needs credentials) | Done (Cycle 8 approved with conditions) |
+| Cycle 9, Task 9.2 | Local-owner scope, Host allowlist, session list, delete-all, `secure_delete` (API.md) | Done (awaiting review) |
 | Cycle 10 | Deployment hardening (§9) | Not started |

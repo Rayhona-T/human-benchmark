@@ -1,0 +1,496 @@
+/* Personal Observatory (Cycle 9, development builds only). Uses the
+   existing design tokens and page patterns; no new visual language. */
+
+.observatory {
+  gap: var(--space-8);
+}
+
+.observatory .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.observatory .feedback__body p + p {
+  margin-top: var(--space-2);
+}
+
+.observatory-muted {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.observatory-back {
+  justify-self: start;
+}
+
+.observatory-flash:focus {
+  outline: none;
+}
+
+.observatory-flash:empty {
+  display: none;
+}
+
+/* --- History ------------------------------------------------------------- */
+
+.observatory-history {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.observatory-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.observatory-filter {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 200px;
+}
+
+.observatory-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.observatory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.observatory-table caption {
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.observatory-table th,
+.observatory-table td {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.observatory-table thead th {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.observatory-table tbody th {
+  font-weight: var(--font-weight-semibold);
+}
+
+.observatory-version {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.observatory-version + .badge {
+  margin-top: var(--space-1);
+}
+
+.observatory-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.observatory-actions .text-link {
+  margin-right: var(--space-3);
+}
+
+/* Narrow screens: each session becomes a labelled block instead of a row. */
+@media (max-width: 720px) {
+  .observatory-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .observatory-table,
+  .observatory-table tbody,
+  .observatory-table tr,
+  .observatory-table th,
+  .observatory-table td {
+    display: block;
+  }
+
+  .observatory-table caption {
+    display: block;
+  }
+
+  .observatory-table tr {
+    border-top: 1px solid var(--border-default);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .observatory-table th,
+  .observatory-table td {
+    border-top: 0;
+    padding: var(--space-1) 0;
+  }
+
+  .observatory-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
+  }
+
+  .observatory-actions {
+    text-align: left;
+    padding-top: var(--space-2);
+  }
+}
+
+/* --- Detail ---------------------------------------------------------------- */
+
+.observatory-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.observatory-meta > div {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  padding: var(--space-3) var(--space-4);
+}
+
+.observatory-meta dt {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.observatory-meta dd {
+  margin: var(--space-1) 0 0;
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.observatory-id {
+  font-size: var(--text-xs);
+}
+
+.observatory-limits {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+  color: var(--text-secondary);
+}
+
+.observatory-limits strong {
+  color: var(--text-primary);
+}
+
+/* The shared results component is centred on the experiment pages; here it
+   lines up with the rest of the page. Layout only; content is unchanged. */
+.observatory .session-results {
+  margin: 0;
+  max-width: none;
+}
+
+/* --- Destructive actions ------------------------------------------------ */
+
+.observatory-danger {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  padding: var(--space-6);
+}
+
+.observatory-danger > p {
+  max-width: 68ch;
+  color: var(--text-secondary);
+}
+
+.observatory-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(15 23 42 / 0.45);
+}
+
+.observatory-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 2 * var(--space-4));
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  background: var(--surface-page);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+}
+
+.observatory-dialog h2 {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.observatory-dialog__body {
+  display: grid;
+  gap: var(--space-3);
+  color: var(--text-secondary);
+}
+
+.observatory-dialog__field {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--text-primary);
+}
+
+.observatory-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+/* --- Views (History | Trends) -------------------------------------------- */
+
+.observatory-tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.observatory-tabs__link {
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.observatory-tabs__link:hover {
+  color: var(--text-primary);
+}
+
+.observatory-tabs__link--active {
+  border-bottom-color: var(--color-accent-700);
+  color: var(--color-accent-700);
+}
+
+/* --- Trends ---------------------------------------------------------------- */
+
+.observatory-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.observatory-switch legend {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.observatory-switch__option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  padding: var(--space-2) var(--space-4);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.observatory-switch__option--active {
+  border-color: var(--color-accent-700);
+  background: var(--color-accent-50);
+  color: var(--color-accent-700);
+}
+
+.observatory-switch__option:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.observatory-inspect {
+  max-width: 420px;
+}
+
+.observatory-metric,
+.observatory-selected,
+.observatory-insufficient {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.observatory-metric__explain {
+  max-width: 72ch;
+  color: var(--text-secondary);
+}
+
+.observatory-insufficient {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  padding: var(--space-6);
+}
+
+.observatory-excluded {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--text-secondary);
+}
+
+.observatory-details summary {
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+}
+
+.observatory-details[open] summary {
+  margin-bottom: var(--space-3);
+}
+
+.observatory-table--values td {
+  vertical-align: top;
+}
+
+/* Condition colours: the first three slots of the validated categorical
+   palette (dataviz reference). Each condition also has its own shape, and
+   every value is in the table, so colour is never the only cue. */
+.trend-chart {
+  --trend-c0: #2a78d6;
+  --trend-c1: #eb6834;
+  --trend-c2: #1baf7a;
+  width: 100%;
+  overflow: hidden;
+}
+
+.trend-chart__svg {
+  display: block;
+  max-width: 100%;
+}
+
+.trend-chart__grid {
+  stroke: var(--border-default);
+  stroke-width: 1px;
+}
+
+.trend-chart__axis {
+  stroke: var(--border-strong);
+  stroke-width: 1px;
+}
+
+.trend-chart__tick,
+.trend-chart__session {
+  fill: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-chart__session--selected {
+  fill: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.trend-chart__selected {
+  fill: var(--color-accent-50);
+}
+
+.trend-chart__gap {
+  stroke: var(--text-tertiary);
+  stroke-width: 1px;
+  stroke-dasharray: 4 3;
+}
+
+.trend-chart__gap-label {
+  fill: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.trend-chart__mark {
+  stroke: var(--surface-raised);
+  stroke-width: 2px;
+}
+
+.trend-chart__mark--c0 {
+  fill: var(--trend-c0);
+}
+
+.trend-chart__mark--c1 {
+  fill: var(--trend-c1);
+}
+
+.trend-chart__mark--c2 {
+  fill: var(--trend-c2);
+}
+
+.trend-chart__hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.trend-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.trend-chart__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* One value's parts (accuracy, timeouts, successful responses), each on its
+   own line so they stay readable in narrow table cells and on mobile. */
+.observatory-value {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.observatory-value > span + span {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.observatory-window {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-5);
+}

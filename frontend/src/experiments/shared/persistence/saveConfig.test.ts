@@ -21,8 +21,7 @@ describe("save configuration", () => {
   it.each([
     ["http://127.0.0.1:8000", "http://127.0.0.1:8000"],
     ["http://localhost:8000/", "http://localhost:8000"],
-    ["http://[::1]:8000", "http://[::1]:8000"],
-  ])("accepts the loopback address %s", (raw, origin) => {
+  ])("accepts the supported local address %s", (raw, origin) => {
     expect(readSaveConfig({ DEV: true, VITE_HB_LOCAL_SAVE_API: raw })).toEqual({
       apiBase: origin,
     });
@@ -30,6 +29,10 @@ describe("save configuration", () => {
 
   it.each([
     "https://example.com",
+    // The backend refuses these (Host allowlist; plain HTTP on 127.0.0.1 only).
+    "http://[::1]:8000",
+    "https://127.0.0.1:8000",
+    "https://localhost:8000",
     "http://192.168.1.20:8000",
     "http://127.0.0.1.example.com",
     "http://user:pass@127.0.0.1:8000",

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
+import { observatoryEnabled } from "../../app/devFeatures";
 import "./AppShell.css";
 
 export function AppShell() {
@@ -90,6 +91,19 @@ export function AppShell() {
             >
               Methodology
             </NavLink>
+            {/* Development builds with a local test backend only; removed
+                from production builds (app/devFeatures.ts). */}
+            {import.meta.env.DEV && observatoryEnabled() ? (
+              <NavLink
+                className={({ isActive }) =>
+                  `app-shell__nav-link${isActive ? " app-shell__nav-link--active" : ""}`
+                }
+                to="/observatory"
+                onClick={() => setMenuOpen(false)}
+              >
+                Observatory
+              </NavLink>
+            ) : null}
           </nav>
         </div>
       </header>

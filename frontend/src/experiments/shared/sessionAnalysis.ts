@@ -9,9 +9,9 @@
  */
 import type {
   ExperimentConfiguration,
+  PracticeOrMain,
   SessionRecordStatus,
   TrialOutcome,
-  TrialRecord,
 } from "../../engine/contracts";
 
 export type InvalidReason = Extract<
@@ -178,9 +178,24 @@ export interface SessionResults<
   trialSeries: readonly TrialPoint<TCondition>[] | null;
 }
 
+/**
+ * The fields of one trial record that the analysis reads, and nothing else
+ * (Cycle 9 Task 9.3: type-only narrowing; no calculation changed). Engine
+ * `TrialRecord`s satisfy it structurally, as do trials reloaded from the
+ * backend (observatory/storedSession.ts). Records are analysed in the order
+ * given.
+ */
+export interface AnalysableTrial {
+  readonly phase: PracticeOrMain;
+  readonly trialIndex: number;
+  readonly condition: string;
+  readonly outcome: TrialOutcome;
+  readonly timing: { readonly reactionTimeMs: number | null };
+}
+
 export interface SessionResultsInput {
   status: SessionRecordStatus;
-  records: readonly TrialRecord<unknown, string, unknown>[];
+  records: readonly AnalysableTrial[];
   breakTaken: boolean;
   breakDurationMs: number | null;
 }

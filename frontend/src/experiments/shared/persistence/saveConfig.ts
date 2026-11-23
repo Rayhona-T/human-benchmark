@@ -5,12 +5,14 @@
  *   1. it exists only in a dev-server build (`import.meta.env.DEV`); a
  *      production build never offers it, whatever its configuration;
  *   2. it must be switched on explicitly with VITE_HB_LOCAL_SAVE_API;
- *   3. that address must be this computer (loopback), so data cannot be sent
- *      to another machine by configuration.
+ *   3. that address must be this computer, in a form the backend accepts
+ *      (`http://127.0.0.1` or `http://localhost`, any port; ../localApi.ts),
+ *      so data cannot be sent to another machine by configuration.
  * Approved participant collection would need an approved notice, the
  * deployment requirements in docs/backend/BACKEND_ARCHITECTURE.md §9, and a
  * reviewed code change. It cannot be enabled by configuration alone.
  */
+import { parseLocalApiOrigin } from "../localApi";
 
 /** The consent notice this page presents. Must be on the backend allowlist
  * (backend/app/consent.py); a backend test checks both stay in step. */
@@ -30,28 +32,15 @@ export interface SaveEnvironment {
   VITE_HB_LOCAL_SAVE_API?: string;
 }
 
-const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
-
-/** Returns the save configuration, or null when saving must not be offered. */
+/**
+ * Returns the save configuration, or null when saving must not be offered.
+ * The address rule is shared with the Observatory (../localApi.ts): only
+ * addresses the local backend actually accepts.
+ */
 export function readSaveConfig(env: SaveEnvironment): SaveConfig | null {
   if (!env.DEV) return null;
-  const raw = env.VITE_HB_LOCAL_SAVE_API?.trim();
-  if (!raw) return null;
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    return null;
-  }
-  const plainOrigin =
-    (url.protocol === "http:" || url.protocol === "https:") &&
-    url.username === "" &&
-    url.password === "" &&
-    (url.pathname === "/" || url.pathname === "") &&
-    url.search === "" &&
-    url.hash === "";
-  if (!plainOrigin || !LOOPBACK_HOSTS.has(url.hostname)) return null;
-  return { apiBase: url.origin };
+  const apiBase = parseLocalApiOrigin(env.VITE_HB_LOCAL_SAVE_API);
+  return apiBase ? { apiBase } : null;
 }
 
 /** Configuration of the running app (null in production builds). */
