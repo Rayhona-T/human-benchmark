@@ -2,7 +2,6 @@ import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { HomePage } from "../pages/HomePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
-import { DesignSystemPage } from "../pages/DesignSystemPage";
 import { ExperimentsPage } from "../pages/ExperimentsPage";
 import { MethodologyPage } from "../pages/MethodologyPage";
 import { StroopExperimentPage } from "../experiments/stroop/StroopExperimentPage";
@@ -40,6 +39,24 @@ function observatoryRoutes(): RouteObject[] {
   ];
 }
 
+/**
+ * The design-system preview: development builds only (Cycle 10, Task 10.4,
+ * owner decision). The literal `import.meta.env.DEV` test makes production
+ * builds drop the route and the lazily imported page; there the path shows
+ * the not-found page.
+ */
+function developmentRoutes(): RouteObject[] {
+  if (!import.meta.env.DEV) return [];
+  return [
+    {
+      path: "design-system",
+      lazy: async () => ({
+        Component: (await import("../pages/DesignSystemPage")).DesignSystemPage,
+      }),
+    },
+  ];
+}
+
 export function createAppRoutes(): RouteObject[] {
   return [
     {
@@ -50,7 +67,7 @@ export function createAppRoutes(): RouteObject[] {
         { path: "methodology", element: <MethodologyPage /> },
         { path: "experiments/stroop", element: <StroopExperimentPage /> },
         { path: "experiments/flanker", element: <FlankerExperimentPage /> },
-        { path: "design-system", element: <DesignSystemPage /> },
+        ...developmentRoutes(),
         ...observatoryRoutes(),
         { path: "*", element: <NotFoundPage /> },
       ],

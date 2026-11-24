@@ -20,7 +20,7 @@ import {
   screen,
 } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "../../../test/TestRouter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FlankerExperimentPage } from "../../flanker/FlankerExperimentPage";
 import { computeFlankerResults } from "../../flanker/flankerAnalysis";
@@ -151,7 +151,7 @@ const CASES: PageCase[] = [
 ];
 
 function runCompleteSession(testCase: PageCase) {
-  render(<MemoryRouter>{testCase.page()}</MemoryRouter>);
+  render(<TestRouter>{testCase.page()}</TestRouter>);
   testCase.begin();
   fireEvent.click(
     screen.getByRole("button", { name: "Begin 12 practice trials" }),

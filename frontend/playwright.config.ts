@@ -6,10 +6,19 @@ import { defineConfig, devices } from "@playwright/test";
  * released. `vite preview` is not the real host: hosting-specific behavior
  * (deep-link fallback rules, headers, caching) is not verified here.
  *
- * Chromium only for now; the wider browser/device matrix is Task 10.4.
+ * Browsers (Task 10.4): Chromium, Firefox, and WebKit run every spec except
+ *   - tests tagged @chromium-only: real window focus loss uses the Chrome
+ *     DevTools Protocol, and one long multi-reload journey;
+ *   - specs that need no browser (CSV parser, bundle contents), which run
+ *     once, in the Chromium project.
+ * HB_HEADED=1 adds "chromium-headed", which repeats the real focus-loss
+ * tests in a visible window (needs a display; not run in CI).
  * See TESTING.md for commands and troubleshooting.
  */
 const PORT = 4173;
+
+/** Specs that do not depend on the browser engine. */
+const ENGINE_INDEPENDENT = ["**/csv.spec.ts", "**/bundle.spec.ts"];
 
 export default defineConfig({
   testDir: "./e2e",
@@ -20,7 +29,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
-  workers: process.env.CI ? 2 : undefined,
+  // Headed real-focus tests share the operating system's single window
+  // focus, so they run one at a time.
+  workers: process.env.HB_HEADED ? 1 : process.env.CI ? 2 : undefined,
   reporter: process.env.CI
     ? [["list"], ["html", { open: "never" }], ["github"]]
     : [["list"], ["html", { open: "never" }]],
@@ -29,7 +40,30 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+      grepInvert: /@chromium-only/,
+      testIgnore: ENGINE_INDEPENDENT,
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      grepInvert: /@chromium-only/,
+      testIgnore: ENGINE_INDEPENDENT,
+    },
+    ...(process.env.HB_HEADED
+      ? [
+          {
+            name: "chromium-headed",
+            use: { ...devices["Desktop Chrome"], headless: false },
+            grep: /@real-focus/,
+          },
+        ]
+      : []),
+  ],
   webServer: {
     // Always test the current code: build, then serve the production bundle.
     command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${PORT} --strictPort`,

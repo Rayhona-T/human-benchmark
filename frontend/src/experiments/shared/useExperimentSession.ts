@@ -43,6 +43,13 @@ export type SessionScreen =
   | "aborted"
   | "technical";
 
+/** Screens of a session that has ended; only these can be cleared. */
+export const ENDED_SCREENS: readonly SessionScreen[] = [
+  "completed",
+  "aborted",
+  "technical",
+];
+
 export type SessionTrialStage =
   "idle" | "fixation" | "stimulus" | "feedback" | "iti";
 
@@ -106,6 +113,12 @@ export interface ExperimentSessionHook<
   skipBreak: () => void;
   abortSession: () => void;
   restartSession: () => void;
+  /**
+   * FR-PRI-03: discards an ENDED session (completed, exited, or stopped by a
+   * technical error) from this page and returns to the start. Does nothing
+   * while a session is running. Nothing is stored anywhere to clear.
+   */
+  clearSession: () => void;
 }
 
 function createSessionId(): string {
@@ -153,6 +166,10 @@ export function useExperimentSession<
   });
 
   const [screen, setScreen] = useState<SessionScreen>("intro");
+  const screenRef = useRef<SessionScreen>(screen);
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
   const [trialStage, setTrialStageState] = useState<SessionTrialStage>("idle");
   const [activeTrial, setActiveTrial] = useState<Trial | null>(null);
   const [feedback, setFeedback] = useState<SessionRecord | null>(null);
@@ -649,6 +666,31 @@ export function useExperimentSession<
     setScreen("aborted");
   }, [clearTrialTimers, disposeRuntime, setTrialStage, stopBreakInterruption]);
 
+  const clearSession = useCallback(() => {
+    if (!ENDED_SCREENS.includes(screenRef.current)) return;
+    sessionStartedRef.current = false;
+    clearTrialTimers();
+    disposeRuntime();
+    stopBreakInterruption();
+    // Drop every reference to the session's records and schedule; the page
+    // keeps nothing of it. (JavaScript cannot overwrite memory; the data
+    // becomes unreachable and is released by the browser.)
+    lifecycleRef.current = null;
+    scheduleRef.current = null;
+    breakOfferedRef.current = false;
+    breakActionRef.current = false;
+    breakStartRef.current = null;
+    setPracticeIndex(0);
+    setMainIndex(0);
+    setFeedback(null);
+    setActiveTrial(null);
+    setInterruptionReason(null);
+    setPauseInvalidatedTrial(false);
+    setPauseContext(null);
+    setTrialStage("idle");
+    setScreen("intro");
+  }, [clearTrialTimers, disposeRuntime, setTrialStage, stopBreakInterruption]);
+
   const restartSession = useCallback(() => {
     sessionStartedRef.current = false;
     beginSession(seedOverride);
@@ -732,5 +774,6 @@ export function useExperimentSession<
     skipBreak,
     abortSession,
     restartSession,
+    clearSession,
   };
 }

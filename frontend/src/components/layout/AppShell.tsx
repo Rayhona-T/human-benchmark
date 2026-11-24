@@ -34,13 +34,16 @@ export function AppShell() {
           <Link
             className="app-shell__brand"
             to="/"
-            aria-label="HUMAN BENCHMARK home"
             onClick={() => setMenuOpen(false)}
           >
+            {/* Accessible name "HUMAN BENCHMARK home": it starts with the
+                visible text (WCAG 2.5.3 Label in Name); "home" is for
+                assistive technology only. */}
             <span className="app-shell__brand-mark" aria-hidden="true">
               HB
             </span>
             <span>HUMAN BENCHMARK</span>
+            <span className="visually-hidden"> home</span>
           </Link>
 
           <button

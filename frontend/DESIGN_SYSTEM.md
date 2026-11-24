@@ -60,5 +60,8 @@ navigation behavior is implemented here.
 
 ## Component preview
 
-Start the frontend and open `/design-system`. This route is a development
-preview and does not add product navigation or implement the application shell.
+Start the development server and open `/design-system`. This route is a
+development preview and does not add product navigation or implement the
+application shell. It exists in development builds only: production builds
+leave out the route and the page (Cycle 10 Task 10.4), and the path shows the
+not-found page there.

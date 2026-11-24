@@ -67,12 +67,34 @@ what the backend returns. Regenerate them with
 ## Browser tests (Playwright, from `frontend/`)
 
 ```bash
-npx playwright install chromium     # once per machine (Linux CI adds --with-deps)
-npm run test:e2e                    # build, serve with `vite preview`, run all specs
+npx playwright install chromium firefox webkit   # once per machine (Linux CI adds --with-deps)
+npm run test:e2e                    # build, serve with `vite preview`, run all specs in all three browsers
+npm run test:e2e -- --project=firefox           # one browser (chromium, firefox, webkit)
 npx playwright test e2e/app.spec.ts             # one file
 npx playwright test -g "Flanker"                # by test name
 npx playwright show-report                      # open the last HTML report
 ```
+
+**Headed real-focus tests** (a visible Chromium window; needs a display; not
+run in CI). They repeat the real focus-loss tests one at a time:
+
+```bash
+HB_HEADED=1 npx playwright test --project=chromium-headed          # bash
+$env:HB_HEADED=1; npx playwright test --project=chromium-headed    # PowerShell
+```
+
+Do not use the computer while they run: they minimize and restore their own
+window, and other windows taking focus would interfere.
+
+**Browsers (Task 10.4).** Chromium, Firefox, and WebKit each run every spec,
+with these exceptions (`playwright.config.ts`):
+- tests tagged `@chromium-only`: real window focus loss uses the Chrome
+  DevTools Protocol; one long multi-reload journey (42 trials, four reloads)
+  is not repeated (the reload prompt is tested in every browser);
+- `csv.spec.ts` and `bundle.spec.ts` need no browser and run once (Chromium).
+
+The complete session of both experiments, with the export-consistency check,
+runs in all three browsers.
 
 `npm run test:e2e` always rebuilds and tests the **production bundle**, served
 by `vite preview` at `http://127.0.0.1:4173`. Locally an already-running server
@@ -86,6 +108,12 @@ on that port is reused. Stop it first if it serves an old build.
 | `e2e/session-lifecycle.spec.ts` | For Stroop and Flanker: reload before starting, during practice, the main task, and the break; navigating away, Back and Forward; Exit (incomplete) then Restart (no shared records); closing the page. Nothing is restored and the browser stores nothing |
 | `e2e/privacy.spec.ts` | Browsing makes only same-origin GET requests for static assets; no cookies, local/session storage, IndexedDB or service workers; a self-test proving the network check catches a cross-origin or POST request |
 | `e2e/csv.spec.ts` | The strict RFC 4180 parser used to read exports (quoting, commas, escaped quotes, line breaks, empty fields, row lengths, byte-order mark), including round trips through the app's own CSV writer. No browser needed |
+| `e2e/session-departure.spec.ts` | Clearing session data (FR-PRI-03): not offered while running; Cancel keeps it; clearing after export; the next session shares no records. Leaving an active session: in-app links, Back, Forward, and Escape (pause, Stay resumes, Leave goes); the browser's reload and close prompt only while active |
+| `e2e/a11y.spec.ts` | axe-core (WCAG 2.0–2.2 A/AA and best practice) on the site pages and every session state, including the dialogs and incomplete results; the break and completed results are scanned in `experiments.spec.ts` |
+| `e2e/keyboard.spec.ts` | The whole journey without a mouse: visible focus at every stop, focus moved to new screens, Enter/Space never active during trials, Pause/Resume, every dialog keeps focus inside (Tab and Shift+Tab) and starts on the safe choice, Escape cancels |
+| `e2e/responsive.spec.ts` | 1440, 1280, 768, 390, and 320 px wide: no horizontal page overflow, usable navigation, the first stimulus fully visible. Flanker's width guard when the window is resized. A measurement of where the stimulus appears in phone landscape |
+| `e2e/security-headers.spec.ts` | The recommended headers (`docs/HOSTING.md`) applied to every response: pages, a session of each experiment, the CSV download, and clearing work with no Content Security Policy violation; a self-test that the policy is enforced |
+| `e2e/bundle.spec.ts` | The production files contain no development-only code (save client and endpoint, consent notice, Observatory, design-system page) and are one script and one stylesheet |
 
 **Export consistency (`e2e/support/results.ts`).** Every session-ending
 browser test downloads the real CSV, parses it with the strict parser
@@ -125,19 +153,56 @@ can take about two minutes each; in CI the whole suite is much faster.
 - **Counts:** the counts asserted are those the test itself produced (it
   decides every response). They are not scientific expectations.
 
+**Accessibility checks (axe-core).** axe waits on timers internally, and
+session tests pause the fake clock, so the scan is started in the page and
+the clock is stepped 5 ms at a time until it finishes (about 10 ms of
+simulated time per scan). Each scan first waits for CSS transitions to end,
+so colors are measured at rest. Automated checks find only part of all
+accessibility problems; no screen reader was used (see below).
+
 **What the privacy check cannot prove.**
 - Behavior in other browsers.
 - Requests made by browser extensions or by the browser outside the page.
 - What a real host logs about ordinary asset requests.
 
+**Known browser and tool limitations (observed in Task 10.4).**
+- **Real tab hiding** could not be produced under automation in any browser,
+  headless or headed (Playwright's browsers keep pages visible). Hidden
+  pages are emulated; real focus loss (a minimized window) is tested in
+  Chromium only. Check real tab switching by hand (below).
+- **WebKit** never puts links in the Tab order (like Safari's default);
+  keyboard access to links is checked in Chromium and Firefox.
+- **After a focused control disappears** (Resume, Continue, Stay), Chromium
+  and Firefox continue the Tab sequence from where it was; WebKit restarts at
+  the top of the page.
+- **Tabbing past the first or last control** moves focus into the browser's
+  own interface: during a session that is a real loss of page focus, and the
+  session pauses as the protocol requires.
+- **Firefox:** running axe on the leave confirmation and on the completed
+  results crashed the page in every attempt (Playwright's Firefox build on
+  Windows). Both work in Firefox (the sessions, dialogs, and export checks
+  pass there); those two scans run in Chromium and WebKit only. Re-check on
+  Linux CI and with newer Playwright releases.
+- **Playwright's WebKit** does not close a page through a
+  beforeunload-running close even when nothing objects; the test checks that
+  no prompt appears instead.
+
+**Manual checks before release (not automated).**
+- **Real tab switching:** in each browser, start a session, switch to
+  another tab during a stimulus and come back: the session is paused and
+  that trial is invalid (CSV `invalid_reason` `visibility_lost`).
+- **Screen reader:** NVDA with Firefox or Chrome, and VoiceOver with Safari:
+  the briefing, practice feedback, pause, break, results, dialogs, and
+  clearing are announced meaningfully.
+- **Zoom:** 200% and 400% browser zoom on the briefing and results.
+
 **Not covered yet.**
-- **Browsers:** other browsers and devices (Task 10.4).
 - **Timing:** real timing (the clock is simulated).
-- **Interruptions:** real tab switching (hidden pages are emulated; focus
-  loss is real).
-- **Accessibility audits.**
+- **Touch-only devices:** the experiments need a physical keyboard; phone
+  and tablet sizes are checked for layout only.
 - **Hosting-specific behavior:** the host's deep-link fallback, response
-  headers and caching. `vite preview` is not the production host.
+  headers and caching. `vite preview` is not the production host. See
+  `docs/HOSTING.md` for the requirements and the verification procedure.
 
 ## CI
 
@@ -149,11 +214,13 @@ secrets.
 | --- | --- | --- |
 | Frontend checks | Yes | `npm ci`, type check, lint, format, Vitest, build |
 | Backend checks | Yes | pinned install, ruff, ruff format, mypy, pytest (Python 3.12) |
-| Browser tests | Yes | Playwright Chromium against the production build; the report and traces are uploaded as the `playwright-report` artifact (kept 7 days) |
+| Browser tests (chromium, firefox, webkit) | Yes | One job per browser engine, Playwright against the production build; each job's report and traces are uploaded as `playwright-report-<browser>` (kept 7 days). A failure in one engine does not cancel the others |
 | Dependency audit | No (reported) | `npm audit --audit-level=high`, `pip-audit` on the pinned requirements. Findings are reviewed, and fixes are separate changes. Needs network access to the advisory databases |
 
 "Blocks a merge" takes effect only once these jobs are made required checks in
-the repository's branch protection settings.
+the repository's branch protection settings. The browser job names changed in
+Task 10.4 ("Browser tests (chromium)", "(firefox)", "(webkit)"): update any
+required checks that name the old "Browser tests (Chromium)".
 
 ## When something fails
 

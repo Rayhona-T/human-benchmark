@@ -193,3 +193,15 @@
     flex-direction: column;
   }
 }
+
+/* WCAG 1.4.10 Reflow: at 320 CSS px the brand and the menu button must fit
+   without horizontal scrolling (they overflowed by 19 px; Task 10.4). */
+@media (max-width: 360px) {
+  .app-shell__header-inner {
+    gap: var(--space-3);
+  }
+
+  .app-shell__brand {
+    letter-spacing: 0.02em;
+  }
+}

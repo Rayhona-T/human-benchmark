@@ -14,7 +14,7 @@ import {
   screen,
 } from "@testing-library/react";
 import type { ReactElement } from "react";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "../../../test/TestRouter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FlankerExperimentPage } from "../../flanker/FlankerExperimentPage";
 import { createFlankerSchedule } from "../../flanker/flankerSchedule";
@@ -106,7 +106,7 @@ function answer(plan: Plan, correctKey: string, keys: readonly string[]) {
 }
 
 function runCompleteSession(experiment: ExperimentCase) {
-  render(<MemoryRouter>{experiment.page()}</MemoryRouter>);
+  render(<TestRouter>{experiment.page()}</TestRouter>);
   experiment.begin();
   fireEvent.click(
     screen.getByRole("button", { name: "Begin 12 practice trials" }),
@@ -241,9 +241,9 @@ describe("saving a finished session from the results page", () => {
 
   it("an exited (incomplete) session cannot be saved and sends nothing", () => {
     render(
-      <MemoryRouter>
+      <TestRouter>
         <FlankerExperimentPage seedOverride={SEED} />
-      </MemoryRouter>,
+      </TestRouter>,
     );
     CASES[1].begin();
     fireEvent.click(

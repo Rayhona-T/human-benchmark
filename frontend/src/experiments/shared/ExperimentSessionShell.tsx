@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { Link } from "react-router-dom";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
+import { Link, useBlocker, type BlockerFunction } from "react-router-dom";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -12,6 +19,7 @@ import type {
   ExperimentSessionHook,
   SessionScreen,
 } from "./useExperimentSession";
+import { ClearSessionContext } from "./clearSessionContext";
 import "./ExperimentSession.css";
 
 /** Screens whose heading receives focus when they appear. */
@@ -20,6 +28,27 @@ const FOCUSED_HEADING_SCREENS: readonly SessionScreen[] = [
   "ready",
   "break",
   "paused",
+  "completed",
+  "aborted",
+  "technical",
+];
+
+/**
+ * A session is "active" from the first practice trial until it ends. Leaving
+ * the page then would silently lose it, so departures are confirmed (Task
+ * 10.4, owner decision). Never on the intro or instructions, and never after
+ * completion, exit, or clearing.
+ */
+const ACTIVE_SCREENS: readonly SessionScreen[] = [
+  "practice",
+  "ready",
+  "main",
+  "break",
+  "paused",
+];
+
+/** Ended sessions whose results may be cleared (FR-PRI-03). */
+const ENDED_RESULT_SCREENS: readonly SessionScreen[] = [
   "completed",
   "aborted",
   "technical",
@@ -67,6 +96,99 @@ export interface ExperimentSessionShellProps<
   presentationUnavailable?: { message: ReactNode; canResume: boolean };
 }
 
+interface SessionDialogProps {
+  id: string;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  onConfirm: () => void;
+  /** Also on Escape. The cancel button has initial focus (the safe choice). */
+  onCancel: () => void;
+}
+
+/** Modal confirmation used for Exit, leaving the page, and clearing data. */
+function SessionDialog({
+  id,
+  title,
+  description,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onCancel,
+}: SessionDialogProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef(onCancel);
+  useEffect(() => {
+    cancelRef.current = onCancel;
+  });
+  useEffect(() => {
+    dialogRef.current
+      ?.querySelector<HTMLButtonElement>("[data-autofocus]")
+      ?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        cancelRef.current();
+        return;
+      }
+      // Modal: Tab and Shift+Tab cycle through the dialog's buttons only.
+      // (The content behind is inert, but the site header is not.)
+      if (event.key !== "Tab") return;
+      const buttons = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? [],
+      );
+      if (buttons.length === 0) return;
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      const inside = dialogRef.current?.contains(document.activeElement);
+      if (event.shiftKey && (!inside || document.activeElement === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey &&
+        (!inside || document.activeElement === last)
+      ) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+  return (
+    <div
+      className="experiment-confirm-backdrop"
+      role="presentation"
+      ref={dialogRef}
+    >
+      <Card
+        as="div"
+        elevated
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby={`${id}-title`}
+        aria-describedby={`${id}-description`}
+      >
+        <h2 id={`${id}-title`}>{title}</h2>
+        <p id={`${id}-description`}>{description}</p>
+        <div className="experiment-actions">
+          <Button type="button" variant="danger" onClick={onConfirm}>
+            {confirmLabel}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            data-autofocus
+            onClick={onCancel}
+          >
+            {cancelLabel}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 /**
  * Shared participant chrome for experiment sessions: session bar, practice
  * and main trial stage, ready/break/paused/end screens, exit confirmation,
@@ -93,21 +215,106 @@ export function ExperimentSessionShell<
   presentationUnavailable,
 }: ExperimentSessionShellProps<TStimulus, TCondition, TResponse>) {
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
-  const exitDialogRef = useRef<HTMLDivElement>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const pausedForExitRef = useRef(false);
   const exitOpenerRef = useRef<HTMLElement | null>(null);
+  const pausedForLeaveRef = useRef(false);
+  const focusIntroRef = useRef(false);
   const { screen } = session;
+  const active = ACTIVE_SCREENS.includes(screen);
+
+  // Leaving the browser page (reload, close, another address) while a session
+  // is active: the browser's own confirmation. Its wording is the browser's.
+  useEffect(() => {
+    if (!active) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Older browsers need returnValue set to show the prompt.
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [active]);
+
+  // Leaving within the app (links, Back, Forward) while a session is active.
+  const shouldBlock = useCallback<BlockerFunction>(
+    ({ currentLocation, nextLocation }) =>
+      active && currentLocation.pathname !== nextLocation.pathname,
+    [active],
+  );
+  const blocker = useBlocker(shouldBlock);
+  const leaveConfirmOpen = blocker.state === "blocked";
+
+  // No trial runs behind the leave dialog. A stimulus already on screen
+  // cannot be paused (protocol §7): it ends by response or deadline, and the
+  // session pauses as soon as that trial is recorded.
+  const { canPause, pauseSession, resumeSession } = session;
+  const resumeAfterStayRef = useRef(false);
+  useEffect(() => {
+    if (!leaveConfirmOpen) {
+      // Stay resumes only once the blocker has reset, so this effect cannot
+      // pause the session again in between.
+      if (resumeAfterStayRef.current) {
+        resumeAfterStayRef.current = false;
+        resumeSession();
+      }
+      return;
+    }
+    // Cleared only by Stay or Leave: a repeated navigation attempt can
+    // briefly reset the blocker while the session stays paused.
+    if (!pausedForLeaveRef.current && canPause) {
+      pausedForLeaveRef.current = pauseSession();
+    }
+  }, [leaveConfirmOpen, canPause, pauseSession, resumeSession]);
+
+  const stayInSession = () => {
+    resumeAfterStayRef.current = pausedForLeaveRef.current;
+    pausedForLeaveRef.current = false;
+    blocker.reset?.();
+  };
+  const leaveSession = () => {
+    pausedForLeaveRef.current = false;
+    blocker.proceed?.();
+  };
+
+  const requestClear = () => {
+    exitOpenerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setClearConfirmOpen(true);
+  };
+  const cancelClear = () => {
+    setClearConfirmOpen(false);
+    if (exitOpenerRef.current?.isConnected) exitOpenerRef.current.focus();
+    exitOpenerRef.current = null;
+  };
+  const confirmClear = () => {
+    setClearConfirmOpen(false);
+    exitOpenerRef.current = null;
+    focusIntroRef.current = true;
+    session.clearSession();
+  };
+  const dialogOpen = exitConfirmOpen || leaveConfirmOpen || clearConfirmOpen;
 
   useEffect(() => {
     // Each screen starts at the top so the session bar (progress, Pause,
     // Exit) is never left hidden under the sticky site header.
     const scroller = document.scrollingElement ?? document.documentElement;
     scroller.scrollTop = 0;
-    if (FOCUSED_HEADING_SCREENS.includes(screen)) {
-      contentRef.current
-        ?.querySelector<HTMLElement>("h1")
-        ?.focus({ preventScroll: true });
+    const focusIntro = screen === "intro" && focusIntroRef.current;
+    focusIntroRef.current = false;
+    // Never take focus from an open dialog (the content behind it is inert).
+    if (contentRef.current?.hasAttribute("inert")) return;
+    if (FOCUSED_HEADING_SCREENS.includes(screen) || focusIntro) {
+      const heading = contentRef.current?.querySelector<HTMLElement>("h1");
+      // After clearing, focus moves to the start screen's heading so
+      // keyboard and screen-reader users are not left on a removed button.
+      if (focusIntro && heading && !heading.hasAttribute("tabindex")) {
+        heading.setAttribute("tabindex", "-1");
+      }
+      heading?.focus({ preventScroll: true });
     }
   }, [screen]);
 
@@ -122,18 +329,6 @@ export function ExperimentSessionShell<
     }
     exitOpenerRef.current = null;
   };
-
-  useEffect(() => {
-    if (!exitConfirmOpen) return;
-    exitDialogRef.current
-      ?.querySelector<HTMLButtonElement>("[data-autofocus]")
-      ?.focus();
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeExitConfirm(true);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  });
 
   const requestExit = () => {
     exitOpenerRef.current =
@@ -168,7 +363,7 @@ export function ExperimentSessionShell<
 
   return (
     <div className="experiment-page">
-      <div ref={contentRef} inert={exitConfirmOpen}>
+      <div ref={contentRef} inert={dialogOpen}>
         {screen !== "intro" &&
         screen !== "instructions" &&
         screen !== "completed" &&
@@ -216,6 +411,14 @@ export function ExperimentSessionShell<
             aria-label={`Active ${experimentName} trial`}
             style={{ background: stageBackground }}
           >
+            {/* Page heading for assistive technology (WCAG 1.3.1 / 2.4.6).
+                Visually hidden: absolutely positioned and 1 px, so the
+                visible trial presentation and stimulus layout are unchanged;
+                never focused, never announced as a live change. */}
+            <h1 className="visually-hidden">
+              {experimentName}{" "}
+              {screen === "practice" ? "practice trials" : "main trials"}
+            </h1>
             {screen === "practice" ? (
               <Badge tone="warning">Practice</Badge>
             ) : (
@@ -239,7 +442,7 @@ export function ExperimentSessionShell<
               : null}
 
             {session.trialStage === "feedback" && session.feedback ? (
-              <Card className="experiment-feedback" role="status">
+              <Card as="div" className="experiment-feedback" role="status">
                 {session.feedback.outcome.category === "correct" ? (
                   <h2>Correct</h2>
                 ) : session.feedback.outcome.category === "incorrect" ? (
@@ -381,42 +584,47 @@ export function ExperimentSessionShell<
             </div>
           </Card>
         ) : null}
-        {results}
+        <ClearSessionContext.Provider
+          value={ENDED_RESULT_SCREENS.includes(screen) ? requestClear : null}
+        >
+          {results}
+        </ClearSessionContext.Provider>
       </div>
 
       {exitConfirmOpen ? (
-        <div
-          className="experiment-confirm-backdrop"
-          role="presentation"
-          ref={exitDialogRef}
-        >
-          <Card
-            elevated
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="exit-title"
-            aria-describedby="exit-description"
-          >
-            <h2 id="exit-title">Exit this session?</h2>
-            <p id="exit-description">
-              No trials run while you decide. If you exit, the session is marked
-              incomplete and uncompleted trials are not fabricated.
-            </p>
-            <div className="experiment-actions">
-              <Button type="button" variant="danger" onClick={confirmExit}>
-                Exit session
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                data-autofocus
-                onClick={() => closeExitConfirm(true)}
-              >
-                Continue
-              </Button>
-            </div>
-          </Card>
-        </div>
+        <SessionDialog
+          id="exit"
+          title="Exit this session?"
+          description="No trials run while you decide. If you exit, the session is marked incomplete and uncompleted trials are not fabricated."
+          confirmLabel="Exit session"
+          cancelLabel="Continue"
+          onConfirm={confirmExit}
+          onCancel={() => closeExitConfirm(true)}
+        />
+      ) : null}
+
+      {leaveConfirmOpen ? (
+        <SessionDialog
+          id="leave"
+          title="Leave this session?"
+          description="It will end as incomplete and its data will be discarded."
+          confirmLabel="Leave"
+          cancelLabel="Stay"
+          onConfirm={leaveSession}
+          onCancel={stayInSession}
+        />
+      ) : null}
+
+      {clearConfirmOpen ? (
+        <SessionDialog
+          id="clear"
+          title="Clear this session's data?"
+          description="This session's trials and results will be removed from this page. This cannot be undone. Files you already downloaded are not affected."
+          confirmLabel="Clear data"
+          cancelLabel="Cancel"
+          onConfirm={confirmClear}
+          onCancel={cancelClear}
+        />
       ) : null}
     </div>
   );

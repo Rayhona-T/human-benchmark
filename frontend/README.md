@@ -83,9 +83,9 @@ the Observatory exist only in development builds (see below).
 
 The app provides `/`, `/experiments`, `/methodology`,
 `/experiments/stroop`, and `/experiments/flanker`. `/design-system` is a
-development preview that is not linked from the navigation; it is currently
-also present in production builds (an open decision, Cycle 10 Task 10.3).
-Unknown routes use the not-found page.
+development preview, available in development builds only (Cycle 10 Task
+10.4); in production builds it shows the not-found page. Unknown routes use
+the not-found page.
 
 The top navigation is intentionally limited to Home, Experiments, and
 Methodology. Desktop navigation is horizontal; at narrow widths it becomes a
@@ -94,8 +94,8 @@ keyboard-operable disclosure menu. The menu closes on navigation or Escape.
 ## Design system
 
 Design tokens and component conventions are documented in
-`DESIGN_SYSTEM.md`. Start the app and open `/design-system` to inspect the
-component preview.
+`DESIGN_SYSTEM.md`. Start the development server and open `/design-system` to inspect the
+component preview (development builds only).
 
 ## Foundation audit
 

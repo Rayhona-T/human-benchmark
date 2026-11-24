@@ -91,6 +91,28 @@ See [EXPORT_DATA_DICTIONARY.md](EXPORT_DATA_DICTIONARY.md). In short:
 It is available for complete and incomplete sessions, because it is the
 participant's own raw data, labelled with its status.
 
+## Clearing session data (FR-PRI-03, Cycle 10 Task 10.4)
+
+Owner-approved. On the results of an ended session (completed, exited, or
+stopped by a technical error), a **Clear this session's data** button follows
+"Download trial data (CSV)", with this explanation:
+
+> This removes this session's trials and results from this page and returns
+> you to the start. Nothing is stored by HUMAN BENCHMARK. Files you already
+> downloaded are not affected; delete them yourself if you want them gone.
+
+(In a development build with saving switched on, the second sentence reads
+"A copy you saved to the local test backend is not affected.")
+
+The button opens a confirmation, **Clear this session's data?**, with
+**Clear data** and **Cancel** (Cancel has focus; Escape cancels). Clearing
+drops every reference to the session's records and schedule and returns to
+the experiment's start, where focus moves to the heading. Nothing is stored
+anywhere, so nothing else needs clearing. JavaScript cannot overwrite memory:
+the data becomes unreachable and the browser releases it. The action is never
+offered while a session is running, and a stored session viewed in the
+development Observatory has no clear button (it has its own deletion).
+
 ## Architecture
 
 | Layer                          | Files                                                           |

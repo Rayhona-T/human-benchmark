@@ -19,7 +19,9 @@ import {
   exitSession,
   mainPlan,
   openWithFakeClock,
+  leaveDialog,
   progress,
+  reloadConfirmingLeave,
   runTrial,
   startMain,
   startPractice,
@@ -61,63 +63,68 @@ async function expectFreshStart(page: Page, driver: ExperimentDriver) {
 
 for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
   test.describe(`${driver.name} session lifecycle`, () => {
-    test("reload before starting, during practice, during the main task, and during the break restores nothing", async ({
-      page,
-      baseURL,
-    }) => {
-      // 12 practice + 30 main trials in simulated time: long, not flaky.
-      test.slow();
-      const network = recordNetwork(page, baseURL ?? "");
-      await openWithFakeClock(page, driver);
-      await page.reload();
-      await expectFreshStart(page, driver);
+    test(
+      "reload before starting, during practice, during the main task, and during the break restores nothing",
+      {
+        // Long (42 trials); the reload prompt itself is covered in every
+        // browser by session-departure.spec.ts.
+        tag: "@chromium-only",
+      },
+      async ({ page, baseURL }) => {
+        // 12 practice + 30 main trials in simulated time: long, not flaky.
+        test.slow();
+        const network = recordNetwork(page, baseURL ?? "");
+        await openWithFakeClock(page, driver);
+        await page.reload();
+        await expectFreshStart(page, driver);
 
-      // During practice (after two recorded trials).
-      await driver.completeMappingCheck(page);
-      await page
-        .getByRole("button", { name: "Begin 12 practice trials" })
-        .click();
-      await runTrial(page, driver, "correct");
-      await runTrial(page, driver, "wrong");
-      await page.reload();
-      await expectFreshStart(page, driver);
-
-      // During the main task (after two main trials).
-      await driver.completeMappingCheck(page);
-      await page
-        .getByRole("button", { name: "Begin 12 practice trials" })
-        .click();
-      for (let trial = 1; trial <= PRACTICE_TRIALS; trial++) {
+        // During practice (after two recorded trials).
+        await driver.completeMappingCheck(page);
+        await page
+          .getByRole("button", { name: "Begin 12 practice trials" })
+          .click();
         await runTrial(page, driver, "correct");
-      }
-      await startMain(page);
-      await runTrial(page, driver, "correct");
-      await runTrial(page, driver, "none");
-      await expect(progress(page)).toHaveText(/^Trial \d+ of 60$/);
-      await page.reload();
-      await expectFreshStart(page, driver);
+        await runTrial(page, driver, "wrong");
+        await reloadConfirmingLeave(page);
+        await expectFreshStart(page, driver);
 
-      // During the optional break.
-      await driver.completeMappingCheck(page);
-      await page
-        .getByRole("button", { name: "Begin 12 practice trials" })
-        .click();
-      for (let trial = 1; trial <= PRACTICE_TRIALS; trial++) {
+        // During the main task (after two main trials).
+        await driver.completeMappingCheck(page);
+        await page
+          .getByRole("button", { name: "Begin 12 practice trials" })
+          .click();
+        for (let trial = 1; trial <= PRACTICE_TRIALS; trial++) {
+          await runTrial(page, driver, "correct");
+        }
+        await startMain(page);
         await runTrial(page, driver, "correct");
-      }
-      await startMain(page);
-      for (let trial = 1; trial <= BREAK_AFTER; trial++) {
-        await runTrial(page, driver, mainPlan(trial));
-      }
-      const rest = page.getByRole("heading", {
-        name: "Rest before continuing",
-      });
-      await advanceUntil(page, () => rest.isVisible(), "the optional break");
-      await page.reload();
-      await expectFreshStart(page, driver);
+        await runTrial(page, driver, "none");
+        await expect(progress(page)).toHaveText(/^Trial \d+ of 60$/);
+        await reloadConfirmingLeave(page);
+        await expectFreshStart(page, driver);
 
-      expect(network.violations()).toEqual([]);
-    });
+        // During the optional break.
+        await driver.completeMappingCheck(page);
+        await page
+          .getByRole("button", { name: "Begin 12 practice trials" })
+          .click();
+        for (let trial = 1; trial <= PRACTICE_TRIALS; trial++) {
+          await runTrial(page, driver, "correct");
+        }
+        await startMain(page);
+        for (let trial = 1; trial <= BREAK_AFTER; trial++) {
+          await runTrial(page, driver, mainPlan(trial));
+        }
+        const rest = page.getByRole("heading", {
+          name: "Rest before continuing",
+        });
+        await advanceUntil(page, () => rest.isVisible(), "the optional break");
+        await reloadConfirmingLeave(page);
+        await expectFreshStart(page, driver);
+
+        expect(network.violations()).toEqual([]);
+      },
+    );
 
     test("navigating away, Back, and Forward never restore a session in progress", async ({
       page,
@@ -133,6 +140,9 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
         .getByRole("navigation", { name: "Primary navigation" })
         .getByRole("link", { name: "Experiments" })
         .click();
+      // The app asks first (Task 10.4); leaving discards the session.
+      await expect(leaveDialog(page)).toBeVisible();
+      await leaveDialog(page).getByRole("button", { name: "Leave" }).click();
       await expect(page).toHaveURL(/\/experiments$/);
 
       await page.goBack();
@@ -203,7 +213,13 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
       const page = await context.newPage();
       await startPractice(page, driver);
       await runTrial(page, driver, "correct");
+      // The browser asks before closing an active session (Task 10.4).
+      page.once("dialog", (dialog) => {
+        expect(dialog.type()).toBe("beforeunload");
+        void dialog.accept();
+      });
       await page.close({ runBeforeUnload: true });
+      await expect.poll(() => page.isClosed()).toBe(true);
 
       const reopened = await context.newPage();
       await reopened.goto(driver.path);

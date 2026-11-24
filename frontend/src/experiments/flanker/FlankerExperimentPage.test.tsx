@@ -6,7 +6,7 @@ import {
   screen,
   within,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "../../test/TestRouter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFlankerSchedule } from "./flankerSchedule";
 import { FlankerExperimentPage } from "./FlankerExperimentPage";
@@ -16,9 +16,9 @@ let width = 1000;
 
 function renderPage() {
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <FlankerExperimentPage seedOverride={SEED} />
-    </MemoryRouter>,
+    </TestRouter>,
   );
 }
 

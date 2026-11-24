@@ -11,6 +11,8 @@ import {
   FLANKER,
   STROOP,
   advanceUntil,
+  clearSessionData,
+  expectNoLeavePrompt,
   expectedMainTotals,
   mainPlan,
   openWithFakeClock,
@@ -19,6 +21,7 @@ import {
   type ExperimentDriver,
 } from "./support/session";
 import { recordNetwork } from "./support/network";
+import { expectNoAxeViolations } from "./support/a11y";
 import {
   MAIN_TRIALS,
   PRACTICE_TRIALS,
@@ -91,6 +94,7 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
     test("complete session: results, CSV download, and export consistency", async ({
       page,
       baseURL,
+      browserName,
     }) => {
       // 72 trials driven step by step in simulated time: long, not flaky.
       test.slow();
@@ -132,6 +136,7 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
             () => skip.isVisible(),
             "the optional break",
           );
+          await expectNoAxeViolations(page, "optional break");
           await skip.click();
         }
       }
@@ -184,6 +189,28 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
       // compared row by row with what the test did and with every count,
       // rate and median the results page shows (NFR-DATA-01).
       await expectExportMatchesSession(page, driver, trials, "complete");
+      // Firefox: axe crashed the page on this state, as on the leave
+      // confirmation (Playwright's Firefox build, Windows; see TESTING.md).
+      // The session and every export check above still run in Firefox;
+      // Chromium and WebKit scan the completed results.
+      if (browserName !== "firefox") {
+        await expectNoAxeViolations(page, "completed results");
+      }
+
+      // FR-PRI-03 after export: clearing the completed session (confirmed)
+      // returns to a fresh start; nothing of it remains on the page, and
+      // leaving no longer asks.
+      await clearSessionData(page);
+      await expect(
+        page.getByRole("button", { name: `Start ${driver.name}` }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Session overview" }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Download trial data (CSV)" }),
+      ).toHaveCount(0);
+      await expectNoLeavePrompt(page);
 
       // Nothing about the session left the browser: only the app's own
       // static assets were requested, from the same origin.

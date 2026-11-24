@@ -7,15 +7,15 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "../../test/TestRouter";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StroopExperimentPage } from "./StroopExperimentPage";
 
 function renderPage() {
   return render(
-    <MemoryRouter>
+    <TestRouter>
       <StroopExperimentPage seedOverride={1234} />
-    </MemoryRouter>,
+    </TestRouter>,
   );
 }
 

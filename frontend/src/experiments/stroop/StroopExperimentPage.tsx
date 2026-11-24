@@ -181,14 +181,20 @@ export function StroopExperimentPage({
           <StroopResults
             results={results.analysis}
             records={results.records}
-            saveData={{
-              experimentId: "stroop",
-              status: results.status,
-              records: results.records,
-              breakTaken: results.breakTaken,
-              breakDurationMs: results.breakDurationMs,
-              stimulusToApi: stroopStimulusToApi,
-            }}
+            saveData={
+              // Development-only saving (see SessionResults.tsx): production
+              // builds drop this payload builder.
+              import.meta.env.DEV
+                ? {
+                    experimentId: "stroop",
+                    status: results.status,
+                    records: results.records,
+                    breakTaken: results.breakTaken,
+                    breakDurationMs: results.breakDurationMs,
+                    stimulusToApi: stroopStimulusToApi,
+                  }
+                : undefined
+            }
           />
         ) : null
       }

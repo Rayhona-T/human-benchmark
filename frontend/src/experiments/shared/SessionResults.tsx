@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useContext, useId, type ReactNode } from "react";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -14,6 +14,7 @@ import {
 } from "./exportTrials";
 import { buildRtPlotData } from "./rtPlotData";
 import { RtDotPlot } from "./RtDotPlot";
+import { ClearSessionContext } from "./clearSessionContext";
 import { appSaveConfig, type SaveConfig } from "./persistence/saveConfig";
 import { SaveSessionPanel } from "./persistence/SaveSessionPanel";
 import type { ResultsSave } from "./persistence/sessionPayload";
@@ -40,6 +41,16 @@ import {
   type ResultsCopy,
 } from "./resultsFormat";
 import "./SessionResults.css";
+
+/**
+ * The development-only save panel (Cycle 8). Every reference to it, and to
+ * the save configuration, sits behind the literal `import.meta.env.DEV`, which
+ * production builds replace with `false`: the bundler then drops the panel,
+ * the save client, and its endpoint from the production bundle entirely
+ * (Cycle 10, Task 10.4). Development behavior is unchanged.
+ */
+const DevSaveSessionPanel = import.meta.env.DEV ? SaveSessionPanel : null;
+if (import.meta.env.DEV) void import("./persistence/SaveSessionPanel.css");
 
 function RateCell({ value }: { value: RateValue }) {
   if (!value.available) {
@@ -468,6 +479,10 @@ function ExportPanel<TStimulus>({
     ...BASE_COLUMNS_AFTER,
   ];
   const hasRecords = exportData.records.length > 0;
+  // FR-PRI-03: offered only for a live session that has ended (see
+  // ClearSessionContext); never while a session is running.
+  const requestClear = useContext(ClearSessionContext);
+  const clearHintId = useId();
   return (
     <section
       aria-labelledby="results-export"
@@ -508,7 +523,24 @@ function ExportPanel<TStimulus>({
             No trials were recorded in this session.
           </span>
         ) : null}
+        {requestClear ? (
+          <Button
+            type="button"
+            variant="secondary"
+            aria-describedby={clearHintId}
+            onClick={requestClear}
+          >
+            Clear this session&apos;s data
+          </Button>
+        ) : null}
       </div>
+      {requestClear ? (
+        <p id={clearHintId} className="session-results__hint">
+          {saveOffered
+            ? "This removes this session's trials and results from this page and returns you to the start. A copy you saved to the local test backend is not affected. Files you already downloaded are not affected; delete them yourself if you want them gone."
+            : "This removes this session's trials and results from this page and returns you to the start. Nothing is stored by HUMAN BENCHMARK. Files you already downloaded are not affected; delete them yourself if you want them gone."}
+        </p>
+      ) : null}
       <details className="session-results__details">
         <summary>What each column means</summary>
         <p>
@@ -544,7 +576,7 @@ export function SessionResults<
   responseWindowMs = 2000,
   exportData,
   saveData,
-  saveConfig = appSaveConfig(),
+  saveConfig = import.meta.env.DEV ? appSaveConfig() : null,
 }: {
   results: SessionResultsData<TCondition, TId>;
   copy: ResultsCopy<TCondition, TId>;
@@ -556,7 +588,7 @@ export function SessionResults<
   /** Where saving goes; null (production, or not configured) hides it. */
   saveConfig?: SaveConfig | null;
 }) {
-  const saveOffered = Boolean(saveData && saveConfig);
+  const saveOffered = Boolean(DevSaveSessionPanel && saveData && saveConfig);
   const minimum = results.minimumCorrectForMedian;
   const plot = buildRtPlotData(results, responseWindowMs);
   const invalidEntries = Object.entries(results.invalidReasons) as [
@@ -775,8 +807,8 @@ export function SessionResults<
         />
       ) : null}
 
-      {saveData && saveConfig ? (
-        <SaveSessionPanel save={saveData} config={saveConfig} />
+      {DevSaveSessionPanel && saveData && saveConfig ? (
+        <DevSaveSessionPanel save={saveData} config={saveConfig} />
       ) : null}
 
       <section

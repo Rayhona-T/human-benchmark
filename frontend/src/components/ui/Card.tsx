@@ -3,7 +3,8 @@ import "./Card.css";
 
 interface CardProps extends HTMLAttributes<HTMLElement> {
   children: ReactNode;
-  as?: "article" | "section";
+  /** "div" for cards that carry their own role (status, alertdialog). */
+  as?: "article" | "section" | "div";
   elevated?: boolean;
 }
 

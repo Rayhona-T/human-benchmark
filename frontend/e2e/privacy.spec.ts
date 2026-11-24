@@ -44,12 +44,17 @@ test("the network recorder flags requests a client-only app must not make", asyn
   page,
   baseURL,
 }) => {
-  // Self-test: proves the check above can fail. Nothing leaves the machine:
-  // the cross-origin target is a closed local port.
+  // Self-test: proves the check above can fail. Nothing is sent anywhere:
+  // both requests are intercepted and aborted before leaving the browser
+  // (the recorder still sees them). A route is used instead of a closed port
+  // because Firefox and WebKit refuse restricted ports before any request
+  // event fires.
   const network = recordNetwork(page, baseURL ?? "");
+  await page.route("http://127.0.0.1:59999/**", (route) => route.abort());
+  await page.route("**/api/v1/**", (route) => route.abort());
   await page.goto("/");
   await page.evaluate(async () => {
-    await fetch("http://127.0.0.1:9/collect", {
+    await fetch("http://127.0.0.1:59999/collect", {
       method: "POST",
       body: "x",
     }).catch(() => undefined);
@@ -58,9 +63,9 @@ test("the network recorder flags requests a client-only app must not make", asyn
     );
   });
   const violations = network.violations();
-  expect(violations.some((v) => v.includes("http://127.0.0.1:9/collect"))).toBe(
-    true,
-  );
+  expect(
+    violations.some((v) => v.includes("http://127.0.0.1:59999/collect")),
+  ).toBe(true);
   expect(
     violations.some(
       (v) => v.startsWith("POST") && v.includes("/api/v1/sessions"),

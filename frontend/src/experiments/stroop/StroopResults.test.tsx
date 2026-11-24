@@ -6,7 +6,7 @@ import {
   screen,
   within,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "../../test/TestRouter";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TrialOutcome, TrialRecord } from "../../engine/contracts";
 import type { StroopResponse } from "./stroop";
@@ -367,9 +367,9 @@ describe("StroopExperimentPage results integration", () => {
     });
     vi.spyOn(document, "hasFocus").mockReturnValue(true);
     render(
-      <MemoryRouter>
+      <TestRouter>
         <StroopExperimentPage seedOverride={1234} />
-      </MemoryRouter>,
+      </TestRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Start Stroop" }));
     for (const key of ["d", "f", "j", "k"]) fireEvent.keyDown(window, { key });

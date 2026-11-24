@@ -69,6 +69,8 @@ test("development-only features are absent from the production build", async ({
     "/observatory",
     "/observatory/trends",
     "/observatory/sessions/00000000-0000-4000-8000-000000000001",
+    // Development preview only (Task 10.4 owner decision).
+    "/design-system",
   ]) {
     await page.goto(path);
     await expect(

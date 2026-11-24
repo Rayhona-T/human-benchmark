@@ -3,7 +3,8 @@
 # Runs the same checks a developer runs locally (see TESTING.md):
 #   frontend  type check, lint, format, unit/component tests, production build
 #   backend   ruff (lint + format), mypy (strict), pytest
-#   e2e       Playwright browser tests (Chromium) against the production build
+#   e2e       Playwright browser tests against the production build, one job
+#             per browser engine (Chromium, Firefox, WebKit; Task 10.4)
 #   audit     known-vulnerability scan of npm and Python dependencies
 #             (reported, not blocking yet; see TESTING.md)
 #
@@ -82,9 +83,17 @@ jobs:
         run: python -m pytest
 
   e2e:
-    name: Browser tests (Chromium)
+    name: Browser tests (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      # Report every engine's result, even when one fails.
+      fail-fast: false
+      matrix:
+        # Each project runs the specs that apply to it (playwright.config.ts):
+        # Chromium everything; Firefox and WebKit all but the tests that need
+        # the Chrome DevTools Protocol and the browser-independent specs.
+        browser: [chromium, firefox, webkit]
     defaults:
       run:
         working-directory: frontend
@@ -97,15 +106,15 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install (lockfile)
         run: npm ci
-      - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Install ${{ matrix.browser }} for Playwright
+        run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Browser tests (builds and serves the production bundle)
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project=${{ matrix.browser }}
       - name: Keep the report and traces
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: |
             frontend/playwright-report/
             frontend/test-results/

@@ -354,14 +354,20 @@ export function FlankerExperimentPage({
                 records: results.records,
                 stimulusColumns: FLANKER_EXPORT_COLUMNS,
               }}
-              saveData={{
-                experimentId: "flanker",
-                status: results.status,
-                records: results.records,
-                breakTaken: results.breakTaken,
-                breakDurationMs: results.breakDurationMs,
-                stimulusToApi: flankerStimulusToApi,
-              }}
+              saveData={
+                // Development-only saving (see SessionResults.tsx): production
+                // builds drop this payload builder.
+                import.meta.env.DEV
+                  ? {
+                      experimentId: "flanker",
+                      status: results.status,
+                      records: results.records,
+                      breakTaken: results.breakTaken,
+                      breakDurationMs: results.breakDurationMs,
+                      stimulusToApi: flankerStimulusToApi,
+                    }
+                  : undefined
+              }
             />
           ) : null
         }

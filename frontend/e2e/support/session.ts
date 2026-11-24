@@ -289,3 +289,70 @@ export async function exitSession(page: Page) {
     page.getByRole("heading", { name: "Session ended" }),
   ).toBeVisible();
 }
+
+/**
+ * Reloads while a session is active. The app asks the browser to confirm
+ * leaving (beforeunload, Task 10.4); the test checks that the prompt appears
+ * and accepts it. Its text is the browser's own.
+ */
+export async function reloadConfirmingLeave(page: Page) {
+  const prompt = page.waitForEvent("dialog");
+  const reload = page.reload();
+  const dialog = await prompt;
+  expect(dialog.type()).toBe("beforeunload");
+  await dialog.accept();
+  await reload;
+}
+
+/** The in-app "Leave this session?" confirmation (Task 10.4). */
+export function leaveDialog(page: Page): Locator {
+  return page.getByRole("alertdialog", { name: "Leave this session?" });
+}
+
+/** FR-PRI-03: "Clear this session's data", confirmed, back at the start. */
+export async function clearSessionData(page: Page) {
+  const clear = page.getByRole("button", { name: "Clear this session's data" });
+  await expect(clear).toBeVisible();
+  await clear.click();
+  const dialog = page.getByRole("alertdialog", {
+    name: "Clear this session's data?",
+  });
+  await expect(dialog).toContainText(
+    "Files you already downloaded are not affected.",
+  );
+  await dialog.getByRole("button", { name: "Clear data" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(clear).toHaveCount(0);
+}
+
+/**
+ * Checks that the page would NOT ask before unloading: dispatches a
+ * cancelable beforeunload event and checks no handler cancelled it.
+ */
+export async function expectNoLeavePrompt(page: Page) {
+  const prompts = await page.evaluate(() => {
+    const event = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  expect(prompts, "the page asks before unloading").toBe(false);
+}
+
+/**
+ * Opens the experiment the way a participant usually does: from the
+ * catalogue, through an in-app link, so Back and Forward are in-app history
+ * entries that the app can confirm (a direct visit makes Back a browser-level
+ * navigation, which only the browser's beforeunload prompt can confirm).
+ */
+export async function openFromCatalogue(page: Page, driver: ExperimentDriver) {
+  const start = new Date("2026-01-01T00:00:00Z");
+  await page.clock.install({ time: start });
+  await page.goto("/experiments");
+  await page.getByRole("link", { name: `Start ${driver.name}` }).click();
+  await expect(page).toHaveURL(new RegExp(`${driver.path}$`));
+  await expect(
+    page.getByRole("button", { name: `Start ${driver.name}` }),
+  ).toBeVisible();
+  // As in openWithFakeClock: time moves only when the test advances it.
+  await page.clock.pauseAt(new Date(start.getTime() + 60 * 60 * 1000));
+}

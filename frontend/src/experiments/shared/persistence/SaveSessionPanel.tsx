@@ -15,7 +15,7 @@ import {
   SAVE_TIMEOUT_MS,
   type SaveOutcome,
 } from "./saveSessionClient";
-import "./SaveSessionPanel.css";
+// Styles: loaded by SessionResults.tsx in development builds only.
 
 /**
  * Optional, participant-initiated saving of a finished session to the LOCAL

@@ -51,10 +51,11 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 9 — Task 9.3: Frontend data layer (stored-session adapter, type-only analysis input narrowing) | Approved. Identical results for all four fixtures ([OBSERVATORY_DATA_LAYER.md](../frontend/OBSERVATORY_DATA_LAYER.md)) |
 | Cycle 9 — Task 9.4: History, session detail & deletion UI (MVP) | Approved with conditions. Development builds with a local test backend only; absent from production builds; notice 0.2 updated but not activated ([OBSERVATORY_UI.md](../frontend/OBSERVATORY_UI.md)) |
 | Cycle 9 — Task 9.5: Within-experiment session trends | Complete — committed (`67fb153`), including the accuracy-context and window-transparency correction. Descriptive only: comparable sessions, ≥3 for charts, ≥5 earlier sessions for a range, no inference ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md) §4a) |
-| Cycle 10 — Testing, Pilot & Deployment | In progress. Approved release scope: **Option A, client-only static production build** (no network calls, no storage; Observatory and saving compiled out) |
+| Cycle 10 — Testing, Pilot & Deployment | In progress. Approved release scope: **Option A, client-only static production build** (no network calls, no storage). The Observatory and the design-system preview are excluded from production builds; the development save client was still bundled (unreachable) until Task 10.4 removed it |
 | Cycle 10 — Tasks 10.0–10.1: Reconnaissance, release scope & QA matrix | Delivered (read-only reports) |
-| Cycle 10 — Task 10.2: CI & browser-test harness | Committed (`550b750`). First GitHub Actions run failed at mypy (type errors in two backend tests); fixed in Task 10.3, to be confirmed on the next run ([TESTING.md](../TESTING.md)) |
-| Cycle 10 — Task 10.3: Regression, data integrity & interruption testing | Complete — awaiting review |
+| Cycle 10 — Task 10.2: CI & browser-test harness | Committed (`550b750`). First GitHub Actions run failed at mypy (type errors in two backend tests); fixed in Task 10.3; CI run 2 (`9f5ab7e`) passed all four jobs ([TESTING.md](../TESTING.md)) |
+| Cycle 10 — Task 10.3: Regression, data integrity & interruption testing | Committed (`9f5ab7e`); CI run 2 passed |
+| Cycle 10 — Task 10.4: Cross-browser, accessibility & production hardening | Complete — awaiting review. Chromium, Firefox, WebKit; axe and keyboard checks; clearing session data (FR-PRI-03) and departure warnings (owner-approved); development-only code removed from the production bundle; `/design-system` development-only; hosting requirements documented, no host chosen ([HOSTING.md](HOSTING.md), [TESTING.md](../TESTING.md)) |
 | Application product implementation | Not started |
 
 ## Phase 0 — Product/Foundation
