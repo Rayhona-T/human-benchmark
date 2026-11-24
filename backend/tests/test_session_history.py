@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
 from app.models import ExperimentSession, Participant, Trial
@@ -147,7 +147,7 @@ def test_trial_counts_reflect_each_session(client: TestClient, db: Session) -> N
     set_created_at(db, second, datetime(2026, 1, 2, tzinfo=UTC))
     # Remove some trials of the first session directly, to prove counts are per session.
     db.execute(
-        Trial.__table__.delete().where(
+        delete(Trial).where(
             Trial.session_id == uuid.UUID(first), Trial.phase == "main", Trial.trial_index > 50
         )
     )

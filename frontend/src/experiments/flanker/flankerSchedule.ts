@@ -34,9 +34,9 @@ export interface FlankerItem {
 }
 
 /**
- * Base order: conditions then directions, as listed in protocol §8.3. The
- * protocol does not state this order explicitly; it is an implementation
- * choice that determines which schedule a seed produces (see FLANKER_ADAPTER.md).
+ * Base order: conditions then directions, as listed in protocol §8.3 and
+ * ratified in protocol §14 (decision 5). It determines which schedule a seed
+ * produces (see FLANKER_ADAPTER.md).
  */
 export const FLANKER_BASE_ITEMS: readonly FlankerItem[] = [
   { condition: "congruent", targetDirection: "left" },

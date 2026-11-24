@@ -6,7 +6,6 @@
  * Expected counts below are not scientific claims: the test itself decides
  * every response, so the totals it checks are fully controlled.
  */
-import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import {
   FLANKER,
@@ -20,9 +19,14 @@ import {
   type ExperimentDriver,
 } from "./support/session";
 import { recordNetwork } from "./support/network";
+import {
+  MAIN_TRIALS,
+  PRACTICE_TRIALS,
+  answered,
+  expectExportMatchesSession,
+  type ExpectedTrial,
+} from "./support/results";
 
-const PRACTICE_TRIALS = 12;
-const MAIN_TRIALS = 60;
 const BREAK_AFTER = 30;
 
 for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
@@ -84,10 +88,12 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
       await expect(feedback.getByRole("heading")).toHaveText("Incorrect");
     });
 
-    test("complete session to results and CSV download", async ({
+    test("complete session: results, CSV download, and export consistency", async ({
       page,
       baseURL,
     }) => {
+      // 72 trials driven step by step in simulated time: long, not flaky.
+      test.slow();
       // Privacy (client-only scope): record every request from the start.
       const network = recordNetwork(page, baseURL ?? "");
       await openWithFakeClock(page, driver);
@@ -96,8 +102,14 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
         .getByRole("button", { name: "Begin 12 practice trials" })
         .click();
 
+      const trials: ExpectedTrial[] = [];
       for (let trial = 1; trial <= PRACTICE_TRIALS; trial++) {
-        await runTrial(page, driver, "correct");
+        // Practice mixes correct, wrong, and no response too.
+        const plan =
+          trial % 4 === 0 ? "wrong" : trial === 6 ? "none" : "correct";
+        trials.push(
+          answered("practice", trial, await runTrial(page, driver, plan)),
+        );
       }
       const startMain = page.getByRole("button", {
         name: "Start 60 main trials",
@@ -106,7 +118,13 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
       await startMain.click();
 
       for (let trial = 1; trial <= MAIN_TRIALS; trial++) {
-        await runTrial(page, driver, mainPlan(trial));
+        trials.push(
+          answered(
+            "main",
+            trial,
+            await runTrial(page, driver, mainPlan(trial)),
+          ),
+        );
         if (trial === BREAK_AFTER) {
           const skip = page.getByRole("button", { name: "Skip break" });
           await advanceUntil(
@@ -162,44 +180,10 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
         page.getByRole("heading", { name: /Save this session/ }),
       ).toHaveCount(0);
 
-      // CSV export: a real browser download.
-      const downloadPromise = page.waitForEvent("download");
-      await page
-        .getByRole("button", { name: /Download trial data \(CSV\)/ })
-        .click();
-      const download = await downloadPromise;
-      expect(download.suggestedFilename()).toMatch(
-        // exportFileName: human-benchmark-<experiment>-<status>-trials.csv
-        new RegExp(
-          `^human-benchmark-${driver.name.toLowerCase()}-complete-trials\\.csv$`,
-        ),
-      );
-      const path = await download.path();
-      const text = await readFile(path, "utf-8");
-      const [header, ...rows] = text.trim().split(/\r?\n/);
-      const columns = header.split(",");
-      for (const column of [
-        "experiment",
-        "phase",
-        "trial_index",
-        "condition",
-        "outcome",
-        "rt_ms",
-      ]) {
-        expect(columns).toContain(column);
-      }
-      expect(rows).toHaveLength(PRACTICE_TRIALS + MAIN_TRIALS);
-      const phase = columns.indexOf("phase");
-      const outcome = columns.indexOf("outcome");
-      const main = rows
-        .map((row) => row.split(","))
-        .filter((cells) => cells[phase] === "main");
-      expect(main).toHaveLength(MAIN_TRIALS);
-      const count = (value: string) =>
-        main.filter((cells) => cells[outcome] === value).length;
-      expect(count("correct")).toBe(expected.correct);
-      expect(count("incorrect")).toBe(expected.wrong);
-      expect(count("timeout")).toBe(expected.none);
+      // CSV export: a real browser download, parsed as RFC 4180 and
+      // compared row by row with what the test did and with every count,
+      // rate and median the results page shows (NFR-DATA-01).
+      await expectExportMatchesSession(page, driver, trials, "complete");
 
       // Nothing about the session left the browser: only the app's own
       // static assets were requested, from the same origin.

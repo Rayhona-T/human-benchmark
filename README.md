@@ -10,21 +10,32 @@ Make cognitive science more approachable by helping people take part in experime
 
 The project emphasizes transparent methods and scientific context. It is not a clinical diagnostic tool, an IQ test, or a way to rank people's intelligence. The planned experiments are educational and research-inspired; the platform is not a validated cognitive assessment tool.
 
-## Planned initial experiments
+## Experiments
 
-- Stroop task
-- Flanker task
+- Stroop task (`HB-STROOP-1.0`)
+- Flanker task (`HB-FLANKER-1.0`)
 
-## Planned technology
+## Technology
 
-- Frontend: React, TypeScript, and Vite
-- Backend: Python and FastAPI
-- Scientific analysis: NumPy, pandas, and SciPy
-- Data storage: PostgreSQL
+- Frontend: React, TypeScript, and Vite. The experiments, session results
+  (`HB-ANALYSIS-1.1`), and the CSV export all run in the browser.
+- Backend (development and testing only): Python, FastAPI, and SQLite, with
+  PostgreSQL prepared. It is **not part of the production release**.
+- Planned, not in use: scientific analysis with NumPy, pandas, and SciPy
+  (REQUIREMENTS §10).
 
 ## Development status
 
-Cycles 1–7 are complete: Stroop and Flanker run in the browser, with session results and a local CSV export. Cycle 8 Tasks 1+2 added a standalone backend foundation in [backend/](backend/) (FastAPI, SQLite for development, PostgreSQL planned). It is awaiting review and is **not yet connected to the experiments**; no participant data is stored. See [docs/ROADMAP.md](docs/ROADMAP.md) for status. No scientific results are being reported.
+Cycles 1–9 are committed: Stroop and Flanker run in the browser, with session
+results and a local CSV export. A development-only backend and a personal
+Observatory (session history and trends) exist for local testing only.
+
+Cycle 10 (testing, pilot, and deployment) is in progress. The approved release
+scope is a **client-only static build**: no account, no network requests, and
+nothing stored, and the backend, saving, and Observatory are excluded from it.
+Nothing has been deployed. No scientific results are being reported. See
+[docs/ROADMAP.md](docs/ROADMAP.md) for status and [TESTING.md](TESTING.md) for
+the checks.
 
 ## Screenshots and demo
 

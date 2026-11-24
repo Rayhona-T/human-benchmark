@@ -62,3 +62,27 @@ export function recordNetwork(page: Page, origin: string) {
     },
   };
 }
+
+/** Everything the page could have stored in the browser (all should be 0). */
+export async function clientStorage(page: Page) {
+  const inPage = await page.evaluate(async () => ({
+    localStorage: window.localStorage.length,
+    sessionStorage: window.sessionStorage.length,
+    indexedDb: (await indexedDB.databases()).length,
+    caches: (await caches.keys()).length,
+  }));
+  return {
+    ...inPage,
+    cookies: (await page.context().cookies()).length,
+    serviceWorkers: page.context().serviceWorkers().length,
+  };
+}
+
+export const NO_CLIENT_STORAGE = {
+  localStorage: 0,
+  sessionStorage: 0,
+  indexedDb: 0,
+  caches: 0,
+  cookies: 0,
+  serviceWorkers: 0,
+};

@@ -7,7 +7,15 @@ import {
 } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { configure } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { createAppRoutes } from "../../app/router";
 import { analyseStoredSession } from "../../experiments/shared/observatory/storedSession";
 import {
@@ -37,6 +45,15 @@ function shownValue(label: string, scope: HTMLElement = document.body) {
     .at(0) as HTMLElement;
   return term.nextElementSibling?.textContent ?? "";
 }
+
+// Deleting navigates to the lazily loaded history route. Its first import
+// (a Vite transform of the page) took over 5 s under full-suite load and made
+// the deletion test fail intermittently (Cycle 10, Task 10.3). Loading the
+// module once up front makes the route resolve from the module cache; the
+// test still checks the navigation, the message, and the DELETE request.
+beforeAll(async () => {
+  await import("./ObservatoryPage");
+});
 
 beforeEach(() => {
   vi.stubEnv("VITE_HB_LOCAL_SAVE_API", API);

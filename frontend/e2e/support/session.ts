@@ -20,31 +20,42 @@ export interface ExperimentDriver {
   stimulus: (page: Page) => Locator;
   /** The correct key for the stimulus currently shown, read from the page. */
   correctKey: (page: Page) => Promise<string>;
+  /**
+   * The stimulus currently shown, as the values its CSV stimulus columns
+   * must contain (read from the screen, not from application state).
+   */
+  observeStimulus: (page: Page) => Promise<Record<string, string>>;
   /** Intro → instructions → mapping check, leaving practice ready to begin. */
   completeMappingCheck: (page: Page) => Promise<void>;
 }
 
-/** Protocol ink colors (HB-STROOP-1.0 §4) and their keys. */
-const STROOP_KEY_BY_COLOR: Record<string, string> = {
-  "rgb(248, 113, 113)": "d", // red #F87171
-  "rgb(96, 165, 250)": "f", // blue #60A5FA
-  "rgb(74, 222, 128)": "j", // green #4ADE80
-  "rgb(250, 204, 21)": "k", // yellow #FACC15
+/** Protocol ink colors (HB-STROOP-1.0 §4), their names, and their keys. */
+const STROOP_INK_BY_COLOR: Record<string, { ink: string; key: string }> = {
+  "rgb(248, 113, 113)": { ink: "red", key: "d" }, // #F87171
+  "rgb(96, 165, 250)": { ink: "blue", key: "f" }, // #60A5FA
+  "rgb(74, 222, 128)": { ink: "green", key: "j" }, // #4ADE80
+  "rgb(250, 204, 21)": { ink: "yellow", key: "k" }, // #FACC15
 };
+
+async function stroopInk(page: Page) {
+  const color = await STROOP.stimulus(page).evaluate(
+    (element) => (element as HTMLElement).style.color,
+  );
+  const ink = STROOP_INK_BY_COLOR[color];
+  if (!ink) throw new Error(`Unexpected Stroop ink color: ${color}`);
+  return ink;
+}
 
 export const STROOP: ExperimentDriver = {
   name: "Stroop",
   path: "/experiments/stroop",
   keys: ["d", "f", "j", "k"],
   stimulus: (page) => page.locator(".experiment-trial-stage .stroop-stimulus"),
-  correctKey: async (page) => {
-    const color = await STROOP.stimulus(page).evaluate(
-      (element) => (element as HTMLElement).style.color,
-    );
-    const key = STROOP_KEY_BY_COLOR[color];
-    if (!key) throw new Error(`Unexpected Stroop ink color: ${color}`);
-    return key;
-  },
+  correctKey: async (page) => (await stroopInk(page)).key,
+  observeStimulus: async (page) => ({
+    stimulus_word: ((await STROOP.stimulus(page).textContent()) ?? "").trim(),
+    stimulus_ink: (await stroopInk(page)).ink,
+  }),
   completeMappingCheck: async (page) => {
     await page.getByRole("button", { name: "Start Stroop" }).click();
     for (const key of STROOP.keys) await page.keyboard.press(key);
@@ -67,6 +78,19 @@ export const FLANKER: ExperimentDriver = {
     const key = FLANKER_KEY_BY_ARROW[(center ?? "").trim()];
     if (!key) throw new Error(`Unexpected Flanker target: ${center}`);
     return key;
+  },
+  observeStimulus: async (page) => {
+    const cells = await FLANKER.stimulus(page)
+      .locator(".flanker-cell")
+      .allTextContents();
+    const symbols = cells.map((cell) => cell.trim());
+    const flanker = symbols[0];
+    return {
+      stimulus_symbols: symbols.join(""),
+      target_direction: symbols[2] === "←" ? "left" : "right",
+      flanker_direction:
+        flanker === "←" ? "left" : flanker === "→" ? "right" : "neutral",
+    };
   },
   completeMappingCheck: async (page) => {
     await page.getByRole("button", { name: "Start Flanker" }).click();
@@ -95,30 +119,58 @@ export async function advanceUntil(
 }
 
 /** The wrong mapped key for a trial (a key the participant could press). */
-function wrongKey(driver: ExperimentDriver, correct: string): string {
+export function wrongKey(driver: ExperimentDriver, correct: string): string {
   const key = driver.keys.find((candidate) => candidate !== correct);
   if (!key) throw new Error("No alternative mapped key");
   return key;
 }
 
+/** Longer than one 60 Hz display frame (16.7 ms). */
+export const ONE_FRAME_MS = 20;
+
+/** What the test saw and did in one trial, for checking the export. */
+export interface TrialObservation {
+  correctKey: string;
+  /** The mapped key the test pressed; null when it let the deadline pass. */
+  pressedKey: string | null;
+  /** Expected CSV stimulus columns, read from the screen. */
+  stimulus: Record<string, string>;
+}
+
+/** Waits for the next timed stimulus and observes it, without responding. */
+export async function awaitStimulus(
+  page: Page,
+  driver: ExperimentDriver,
+): Promise<Omit<TrialObservation, "pressedKey">> {
+  const stimulus = driver.stimulus(page);
+  await advanceUntil(page, () => stimulus.isVisible(), "the next stimulus");
+  // The stimulus is committed to the page just BEFORE its onset frame; the
+  // trial is presented (onset recorded, response window open) only when that
+  // animation frame runs (protocol §7 step 2). Advance one frame so it has.
+  await page.clock.runFor(ONE_FRAME_MS);
+  return {
+    correctKey: await driver.correctKey(page),
+    stimulus: await driver.observeStimulus(page),
+  };
+}
+
 /**
  * Runs one timed trial: waits for the stimulus, then responds per `plan`
  * after 400 ms of simulated time, or lets the 2,000 ms deadline pass.
- * Returns the correct key that was shown.
  */
 export async function runTrial(
   page: Page,
   driver: ExperimentDriver,
   plan: Plan,
-): Promise<string> {
+): Promise<TrialObservation> {
   const stimulus = driver.stimulus(page);
-  await advanceUntil(page, () => stimulus.isVisible(), "the next stimulus");
-  const correct = await driver.correctKey(page);
+  const seen = await awaitStimulus(page, driver);
+  let pressedKey: string | null = null;
   if (plan !== "none") {
-    await page.clock.runFor(400);
-    await page.keyboard.press(
-      plan === "correct" ? correct : wrongKey(driver, correct),
-    );
+    await page.clock.runFor(400 - ONE_FRAME_MS);
+    pressedKey =
+      plan === "correct" ? seen.correctKey : wrongKey(driver, seen.correctKey);
+    await page.keyboard.press(pressedKey);
   }
   await advanceUntil(
     page,
@@ -126,7 +178,7 @@ export async function runTrial(
     "the stimulus to end",
     { maxMs: 3_000 },
   );
-  return correct;
+  return { ...seen, pressedKey };
 }
 
 /** Main-trial plan with known totals: every 7th no response, every 5th wrong. */
@@ -171,4 +223,69 @@ export async function openWithFakeClock(page: Page, driver: ExperimentDriver) {
   // themselves (an observed flake). Pause now, before any timed screen: from
   // here on, time moves only when the test advances it.
   await page.clock.pauseAt(new Date(start.getTime() + 60 * 60 * 1000));
+}
+
+/** Opens the experiment, completes the mapping check, and begins practice. */
+export async function startPractice(page: Page, driver: ExperimentDriver) {
+  await openWithFakeClock(page, driver);
+  await driver.completeMappingCheck(page);
+  await page.getByRole("button", { name: "Begin 12 practice trials" }).click();
+}
+
+/** Mapping check on an instructions screen already shown (e.g. after Restart). */
+export async function checkKeysAndBeginPractice(
+  page: Page,
+  driver: ExperimentDriver,
+) {
+  for (const key of driver.keys) await page.keyboard.press(key);
+  const begin = page.getByRole("button", { name: "Begin 12 practice trials" });
+  await expect(begin).toBeEnabled();
+  await begin.click();
+}
+
+/** The trial counter in the session bar, e.g. "Practice 3 of 12". */
+export function progress(page: Page): Locator {
+  return page.locator(".experiment-progress");
+}
+
+/** Waits for the ready screen after practice and starts the main trials. */
+export async function startMain(page: Page) {
+  const start = page.getByRole("button", { name: "Start 60 main trials" });
+  await advanceUntil(page, () => start.isVisible(), "the ready screen");
+  await start.click();
+}
+
+export type PauseKind = "trial invalidated" | "no trial on screen" | "break";
+
+const PAUSE_TEXT: Record<PauseKind, string> = {
+  "trial invalidated":
+    "The trial on screen when the pause happened is recorded as invalid and will not be repeated.",
+  "no trial on screen":
+    "No trial was on screen. The session continues where it stopped.",
+  break: "Your break is paused.",
+};
+
+/** The paused screen, with the explanation that matches what happened. */
+export async function expectPaused(page: Page, kind: PauseKind) {
+  await expect(
+    page.getByRole("heading", { name: "Experiment paused" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(PAUSE_TEXT[kind], { exact: false }),
+  ).toBeVisible();
+}
+
+/** Exit → confirm, ending on the "Session ended" (incomplete) screen. */
+export async function exitSession(page: Page) {
+  await page
+    .getByRole("group", { name: "Experiment controls" })
+    .getByRole("button", { name: "Exit" })
+    .click();
+  await page
+    .getByRole("alertdialog", { name: "Exit this session?" })
+    .getByRole("button", { name: "Exit session" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Session ended" }),
+  ).toBeVisible();
 }

@@ -182,9 +182,15 @@ def _scoped(route: APIRoute) -> bool:
     return require_owner_scope in calls
 
 
+def _methods(route: APIRoute) -> frozenset[str]:
+    # FastAPI types APIRoute.methods as optional; every route here declares its methods.
+    assert route.methods is not None, route.path
+    return frozenset(route.methods)
+
+
 def test_every_owner_route_depends_on_the_scope() -> None:
     routes = [r for r in session_routes.owner_router.routes if isinstance(r, APIRoute)]
-    assert {(r.path, frozenset(r.methods)) for r in routes} == {
+    assert {(r.path, _methods(r)) for r in routes} == {
         ("/api/v1/sessions", frozenset({"GET"})),
         ("/api/v1/sessions", frozenset({"DELETE"})),
         ("/api/v1/sessions/{session_id}", frozenset({"GET"})),
@@ -199,10 +205,11 @@ def test_no_unscoped_route_reads_or_deletes_sessions(client: TestClient) -> None
     for route in app.routes:
         if not isinstance(route, APIRoute) or not route.path.startswith(SESSIONS):
             continue
-        if route.methods & {"GET", "DELETE", "PUT", "PATCH"}:
+        methods = _methods(route)
+        if methods & {"GET", "DELETE", "PUT", "PATCH"}:
             assert _scoped(route), route.path
         else:
-            assert route.methods == {"POST"} and route.path == SESSIONS
+            assert methods == {"POST"} and route.path == SESSIONS
 
 
 def test_local_owner_scope_covers_the_whole_database() -> None:

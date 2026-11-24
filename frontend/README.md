@@ -1,7 +1,9 @@
 # HUMAN BENCHMARK Frontend
 
-This directory contains the frontend foundation for the HUMAN BENCHMARK
-educational cognitive-experiment platform.
+This directory contains the frontend of the HUMAN BENCHMARK educational
+cognitive-experiment platform: the Stroop and Flanker experiments, session
+results, and the local CSV export. The production build is a client-only
+static site (Cycle 10 release scope, Option A).
 
 ## Stack
 
@@ -11,24 +13,24 @@ educational cognitive-experiment platform.
 - CSS
 - ESLint and Prettier
 - Vitest and Testing Library
+- Playwright (browser tests, Chromium)
 
 The choices follow the technology decisions in the project requirements. React
 and Vite provide a small, maintainable browser application; React Router
 establishes route boundaries; Vitest and Testing Library cover application
-rendering. The foundation intentionally does not include a design system,
-experiment engine, backend, or persistence.
+rendering. Playwright runs browser tests against the production build.
 
 ## Structure
 
 - `src/app/` — application composition and routing
-- `src/components/layout/` — small shared layout components
-- `src/pages/` — route-level placeholder pages
+- `src/components/` — layout and shared UI components
+- `src/engine/` — experiment engine (session lifecycle, timing, input)
+- `src/experiments/` — Stroop, Flanker, and shared session, analysis, and export
+- `src/pages/` — route-level pages (Observatory pages: development only)
 - `src/styles/` — global CSS initialization
 - `src/test/` — test environment setup
+- `e2e/` — Playwright browser tests (see ../TESTING.md)
 - `public/` — static public assets
-
-Routes and future feature modules can grow from this structure without placing
-experiment logic in the application shell.
 
 ## Install
 
@@ -71,16 +73,19 @@ npm run preview
 
 ## Current scope
 
-The application contains only a branded placeholder home page and a not-found
-route. It does not implement Stroop, Flanker, experiment results, analytics,
-backend communication, or persistence.
+The production build contains the home, experiments, and methodology pages,
+the Stroop and Flanker experiments with session results and a local CSV
+export, and a not-found page. It makes no network requests beyond loading its
+own files and stores nothing in the browser. Saving to the local backend and
+the Observatory exist only in development builds (see below).
 
 ## Core navigation
 
-The MVP foundation currently provides `/`, `/experiments`, and
-`/methodology`. Stroop and Flanker appear as clearly marked upcoming
-experiment entries only. `/design-system` remains available as a development
-preview. Unknown routes use the not-found page.
+The app provides `/`, `/experiments`, `/methodology`,
+`/experiments/stroop`, and `/experiments/flanker`. `/design-system` is a
+development preview that is not linked from the navigation; it is currently
+also present in production builds (an open decision, Cycle 10 Task 10.3).
+Unknown routes use the not-found page.
 
 The top navigation is intentionally limited to Home, Experiments, and
 Methodology. Desktop navigation is horizontal; at narrow widths it becomes a
@@ -114,15 +119,15 @@ interfaces, a monotonic-clock abstraction, and a pure session-transition model.
 The lifecycle controller is implemented for session and trial progression,
 breaks, pauses, aborts, and completion. Stimulus rendering, scheduling
 algorithms, response capture, actual timing, analysis, and persistence remain
-for later tasks.
+for later tasks (all since implemented; see the sections below).
 
 ## Engine integration audit
 
 The complete engine is covered by deterministic unit and integration tests.
 The integration suite exercises practice-to-main completion, incorrect
 responses, timeout and late input, pause/resume, active interruption, break
-pause/resume, abort, technical failure, and race-safe settlement. No UI,
-experiment adapter, backend, or persistence implementation is included.
+pause/resume, abort, technical failure, and race-safe settlement. (At the
+time of that audit no UI, experiment adapter, backend, or persistence existed.)
 
 ## Timing, input, and validity
 

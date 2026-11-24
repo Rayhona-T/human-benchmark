@@ -39,7 +39,7 @@ participant experience is documented in `FLANKER_PARTICIPANT_UI.md`.
 
 - **Items:** six condition × direction items in the base order
   `congruent-left, congruent-right, incongruent-left, incongruent-right, neutral-left, neutral-right`
-  (pending ratification, protocol §14.5).
+  (ratified, protocol §14 decision 5).
 - **Main:** `mulberry32(seed)`; ten balancing sets.
 - **Practice:** `mulberry32((seed XOR 0x9E3779B9) >>> 0)`; two balancing sets.
 - **Each set:** a Fisher–Yates shuffle of the base order. A candidate is accepted when it, together with up to the last three accepted trials, has no run longer than 3 of one condition or one direction, and no two adjacent identical stimuli. Otherwise the set is reshuffled from the base order with the continuing stream, up to 10,000 candidates, after which `FlankerScheduleGenerationError` is thrown.

@@ -35,23 +35,26 @@ This table tracks the current Cycle 1–10 milestone sequence. The numbered phas
 | Cycle 5 — Task 2: Stroop Practice & Main Presentation | Approved (after verification audit) |
 | Cycle 5 — Task 3: Stroop Session Results & Data Interpretation | Approved |
 | Cycle 5 — Task 4: Stroop Integration, Scientific Audit & Approval | Approved |
-| Cycle 6 — Flanker Implementation | In progress — Tasks 1+2 approved; Tasks 3+4 complete, awaiting human approval |
+| Cycle 6 — Flanker Implementation | Complete — committed (`dee737a`) |
 | Cycle 6 — Task 1+2: Flanker Scientific Protocol, Architecture & Engine Integration | Approved (protocol approved as `HB-FLANKER-1.0`; decisions in protocol §14) |
-| Cycle 6 — Task 3+4: Flanker Participant Experience, Final Audit & Approval Readiness | Complete — awaiting human approval |
-| Cycle 7 — Analysis & Results | In progress — Task 1+2 complete; Task 3+4 complete, awaiting human approval |
+| Cycle 6 — Task 3+4: Flanker Participant Experience, Final Audit & Approval Readiness | Complete — committed (`dee737a`) |
+| Cycle 7 — Analysis & Results | Complete — committed (`7e91caa`) |
 | Cycle 7 — Task 1+2: Scientific Analysis Framework, Results Methodology & Architecture | Complete — decisions approved for implementation (`HB-ANALYSIS-1.1`) |
-| Cycle 7 — Task 3+4: Participant Results Experience, Scientific Audit & Approval Readiness | Complete — awaiting human approval |
+| Cycle 7 — Task 3+4: Participant Results Experience, Scientific Audit & Approval Readiness | Complete — committed (`7e91caa`) |
 | Cycle 8 — Backend & Persistence | Complete — checkpoint committed (`a68b3b4`), approved with conditions: local development and test use only under the provisional, unapproved notice `HB-NOTICE-0.1-PROVISIONAL` (no real participant data); live PostgreSQL run still not performed; development database to be moved outside OneDrive before more sessions are saved |
 | Cycle 8 — Tasks 1+2: Backend Architecture, Data Policy & Foundation | Complete — approved with the Cycle 8 conditions ([BACKEND_ARCHITECTURE.md](backend/BACKEND_ARCHITECTURE.md), [DATA_AND_PRIVACY.md](backend/DATA_AND_PRIVACY.md), [API.md](backend/API.md), [ADR-001](decisions/ADR-001-backend-stack.md)) |
 | Cycle 8 — Task 3: Experiment persistence integration | Complete — approved with the Cycle 8 conditions. Local development and test flow only, under the provisional, unapproved notice `HB-NOTICE-0.1-PROVISIONAL`; not approved for real participant data ([PERSISTENCE_INTEGRATION.md](../frontend/PERSISTENCE_INTEGRATION.md)), including the consent-incident fix. Participant key deferred beyond the Cycle 9 MVP |
 | Cycle 8 — Task 4: End-to-end audit & approval readiness | Complete — approved with the Cycle 8 conditions. Live PostgreSQL run not performed (prepared; needs credentials) |
-| Cycle 9 — Personal Observatory | In progress — Tasks 9.1–9.3 approved; Task 9.4 approved with conditions; Task 9.5 (trends) complete, awaiting review. Development-only, local-only ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md)) |
+| Cycle 9 — Personal Observatory | Complete — committed (`67fb153`). Development-only, local-only; not part of the production build ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md)) |
 | Cycle 9 — Task 9.1: Decisions, requirements & privacy documentation | Approved. Owner action outstanding: move the database outside OneDrive before saving more sessions |
 | Cycle 9 — Task 9.2: Backend reads & deletion (Host allowlist, session list, delete-all) | Approved (mypy limitation documented). Local-owner access is development-only and off unless `HB_LOCAL_OWNER_ACCESS=true`; notice 0.2 not active ([API.md](backend/API.md)) |
 | Cycle 9 — Task 9.3: Frontend data layer (stored-session adapter, type-only analysis input narrowing) | Approved. Identical results for all four fixtures ([OBSERVATORY_DATA_LAYER.md](../frontend/OBSERVATORY_DATA_LAYER.md)) |
 | Cycle 9 — Task 9.4: History, session detail & deletion UI (MVP) | Approved with conditions. Development builds with a local test backend only; absent from production builds; notice 0.2 updated but not activated ([OBSERVATORY_UI.md](../frontend/OBSERVATORY_UI.md)) |
-| Cycle 9 — Task 9.5: Within-experiment session trends | Complete — awaiting review. Descriptive only: comparable sessions, ≥3 for charts, ≥5 earlier sessions for a range, no inference ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md) §4a) |
-| Cycle 10 — Testing, Pilot & Deployment | Planned — not started |
+| Cycle 9 — Task 9.5: Within-experiment session trends | Complete — committed (`67fb153`), including the accuracy-context and window-transparency correction. Descriptive only: comparable sessions, ≥3 for charts, ≥5 earlier sessions for a range, no inference ([PERSONAL_OBSERVATORY.md](PERSONAL_OBSERVATORY.md) §4a) |
+| Cycle 10 — Testing, Pilot & Deployment | In progress. Approved release scope: **Option A, client-only static production build** (no network calls, no storage; Observatory and saving compiled out) |
+| Cycle 10 — Tasks 10.0–10.1: Reconnaissance, release scope & QA matrix | Delivered (read-only reports) |
+| Cycle 10 — Task 10.2: CI & browser-test harness | Committed (`550b750`). First GitHub Actions run failed at mypy (type errors in two backend tests); fixed in Task 10.3, to be confirmed on the next run ([TESTING.md](../TESTING.md)) |
+| Cycle 10 — Task 10.3: Regression, data integrity & interruption testing | Complete — awaiting review |
 | Application product implementation | Not started |
 
 ## Phase 0 — Product/Foundation
