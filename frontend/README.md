@@ -55,7 +55,10 @@ The default route is `/`. Unknown routes render a minimal not-found page.
 ```powershell
 npm test
 npm run test:watch
+npm run test:e2e   # Playwright browser tests (first: npx playwright install chromium)
 ```
+
+All checks, CI and troubleshooting: [../TESTING.md](../TESTING.md).
 
 ## Quality and build
 

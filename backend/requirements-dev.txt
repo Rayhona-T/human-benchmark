@@ -7,6 +7,47 @@ ruff==0.17.6
 mypy==2.4.1
 pip-audit==2.10.1
 
+# Transitive dependencies of the tools above, pinned to the versions already
+# installed and tested locally (Cycle 10, Task 10.2), so CI resolves the same
+# set. No version was changed. Regenerate from `pip freeze` when a tool above
+# is upgraded.
+# pytest
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+Pygments==2.21.0
+# httpx
+httpcore==1.0.9
+certifi==2026.11.20
+# mypy
+ast_serialize==0.13.1
+librt==0.17.0
+mypy_extensions==1.2.0
+pathspec==1.1.1
+# pip-audit
+boolean.py==5.0
+CacheControl==0.15.0
+charset-normalizer==3.5.2
+cyclonedx-python-lib==11.12.0
+defusedxml==0.7.1
+filelock==4.3.0
+license-expression==30.4.4
+markdown-it-py==4.3.0
+mdurl==0.1.2
+msgpack==1.2.4
+packageurl-python==0.17.6
+pip_api==0.0.35
+pip-requirements-parser==32.0.1
+platformdirs==4.14.8
+py-serializable==2.2.0
+pyparsing==3.3.3
+requests==2.34.2
+rich==15.0.0
+sortedcontainers==2.4.0
+tomli==2.5.0
+tomli_w==1.2.0
+urllib3==2.8.0
+
 # Optional live PostgreSQL test run (tests/conftest.py, HB_TEST_POSTGRES_URL).
 # pg8000 is a pure-Python driver supported by SQLAlchemy; it was chosen
 # because compiled drivers may be blocked by Windows Smart App Control. All
