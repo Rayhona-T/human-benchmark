@@ -1,9 +1,10 @@
 # HUMAN BENCHMARK — Static Hosting Requirements
 
-Status (Cycle 10, Task 10.4): **no hosting provider, domain, or deployment
-exists.** Nothing below is configured or verified on a real host. This
-document states what the approved release (Option A: a client-only static
-build) needs from any host, and how to verify a host before release.
+Status (Cycle 10, Task 10.4; audited against the build in Task 10.5): **no
+hosting provider, domain, or deployment exists.** Nothing below is
+configured or verified on a real host. This document states what the
+approved release (Option A: a client-only static build) needs from any
+host, and how to verify a host before release.
 
 ## 1. What is deployed
 
@@ -16,7 +17,12 @@ build) needs from any host, and how to verify a host before release.
 | `assets/index-<hash>.css` | All styles (one stylesheet) | New hash when content changes |
 
 The production build makes no network requests beyond loading these files,
-sets no cookies, and stores nothing in the browser. The development backend,
+sets no cookies, and stores nothing in the browser. (The Methodology page
+links to its references at `https://doi.org/…`; following a link is a
+navigation the visitor chooses, not a request made by the app, and sends no
+referrer under the recommended `Referrer-Policy`.) There is no favicon:
+browsers may request `/favicon.ico` on their own, which the fallback in §2
+answers with `index.html`; that request carries no participant data. The development backend,
 saving, the Observatory, and the design-system preview are not in it
 (`frontend/e2e/bundle.spec.ts` checks the built files).
 
@@ -99,3 +105,27 @@ Run against the deployed address (replace `$SITE`):
 
 Record the date, address, and results. Until this is done, real-host
 behavior is **unverified**.
+
+## 6. What is verified where
+
+| Requirement | Verified locally (automated) | Needs a chosen provider | Check on the deployed site |
+| --- | --- | --- | --- |
+| Build contents (§1) | Yes: `bundle.spec.ts` (one script, one stylesheet, no development code); inspected in Task 10.5 | — | Step 5 |
+| Deep links (§2) | Only with `vite preview`, which is not the host | The provider's SPA fallback rule | Step 1, 2 |
+| Caching (§3) | No | The provider's cache-header configuration | Step 3 |
+| Security headers (§4) | The values work with the bundle, no CSP violation (Chromium, Firefox, WebKit) | How the provider sets headers | Step 4, 5 |
+| HTTPS and HSTS | No | Certificate and redirect | Step 6 |
+| No requests beyond the files | Yes: the privacy checks in the browser tests | — | Step 5 |
+
+No response header is active anywhere until it is configured on a host and
+step 4 shows it.
+
+**Deployment checklist (once a provider is chosen; owner decision).**
+1. Build from a clean checkout of the reviewed commit: `npm ci`,
+   `npm run build` in `frontend/`.
+2. Publish only the contents of `frontend/dist/`.
+3. Configure the SPA fallback (§2), cache headers (§3), and security headers
+   (§4) for every route and `/assets/*`; HTTPS with an HTTP redirect.
+4. Run §5 steps 1–6 against the deployed address and record the results.
+5. Run docs/MANUAL_VERIFICATION.md against the deployed address.
+6. Only then add `Strict-Transport-Security`.

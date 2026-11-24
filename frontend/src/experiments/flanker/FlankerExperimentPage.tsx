@@ -261,6 +261,13 @@ export function FlankerExperimentPage({
           presses them. During trials, only F and J are used.
         </li>
         <li>
+          <strong>Stay on this page during trials.</strong> Switching to another
+          tab or window, or clicking outside the page, pauses the task. So can
+          pressing Tab: after the last link or button, it moves out of the page.
+          A trial on screen when this happens is recorded as invalid and not
+          repeated.
+        </li>
+        <li>
           This task may not work well, and you are welcome to stop, if you
           cannot comfortably see the arrows or use the F and J keys, or if your
           keyboard does not type those letters. The arrows are a row{" "}

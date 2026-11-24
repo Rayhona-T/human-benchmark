@@ -151,6 +151,55 @@ describe("session data clearing and departure warnings", () => {
     expect(practice).toHaveTextContent("0 of 12");
   });
 
+  it("clears a session stopped by a technical error and starts fresh", () => {
+    renderStroop();
+    beginPractice();
+    // The browser reports an unusable timestamp for the onset frame: the
+    // engine records that trial as invalid (timing_error) and stops the
+    // session with status technical_error. Only the input is simulated.
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) =>
+      window.setTimeout(() => callback(Number.NaN), 16),
+    );
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+    });
+    expect(
+      screen.getByRole("heading", { name: "The session cannot continue" }),
+    ).toBeVisible();
+    expect(screen.getByText("Stopped by a technical error")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Download trial data (CSV)" }),
+    ).toBeVisible();
+    expect(beforeUnloadPrompts()).toBe(false);
+
+    fireEvent.click(screen.getByRole("button", { name: CLEAR }));
+    expect(
+      screen.getByRole("alertdialog", { name: "Clear this session's data?" }),
+    ).toHaveTextContent("Files you already downloaded are not affected.");
+    fireEvent.click(screen.getByRole("button", { name: "Clear data" }));
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Respond to the ink color",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.queryByRole("heading", { name: "The session cannot continue" }),
+    ).toBeNull();
+    expect(screen.queryByText("Stopped by a technical error")).toBeNull();
+    expect(screen.queryByRole("button", { name: CLEAR })).toBeNull();
+
+    // The next session has none of the cleared records.
+    vi.mocked(window.requestAnimationFrame).mockRestore();
+    beginPractice();
+    expect(screen.getByText("Practice 1 of 12")).toBeInTheDocument();
+    exitSession();
+    const practice = screen
+      .getByText("Practice trials (not analysed)")
+      .closest("div") as HTMLElement;
+    expect(practice).toHaveTextContent("0 of 12");
+  });
+
   it("warns before the browser leaves only while a session is active", () => {
     renderStroop();
     expect(beforeUnloadPrompts()).toBe(false); // intro

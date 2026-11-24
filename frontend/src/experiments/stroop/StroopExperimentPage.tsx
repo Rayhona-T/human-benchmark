@@ -108,6 +108,17 @@ export function StroopExperimentPage({
           failure.
         </li>
         <li>
+          <strong>Keyboard only:</strong> Tab moves between buttons and Enter
+          presses them. During trials, only D, F, J, and K are used.
+        </li>
+        <li>
+          <strong>Stay on this page during trials.</strong> Switching to another
+          tab or window, or clicking outside the page, pauses the task. So can
+          pressing Tab: after the last link or button, it moves out of the page.
+          A trial on screen when this happens is recorded as invalid and not
+          repeated.
+        </li>
+        <li>
           This task may not work well, and you are welcome to stop, if you are
           unfamiliar with the English color words, cannot easily tell the four
           ink colors apart, or use a keyboard that does not type the letters D,

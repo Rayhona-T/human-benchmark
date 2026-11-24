@@ -181,20 +181,37 @@ accessibility problems; no screen reader was used (see below).
 - **Firefox:** running axe on the leave confirmation and on the completed
   results crashed the page in every attempt (Playwright's Firefox build on
   Windows). Both work in Firefox (the sessions, dialogs, and export checks
-  pass there); those two scans run in Chromium and WebKit only. Re-check on
-  Linux CI and with newer Playwright releases.
+  pass there); those two scans run in Chromium and WebKit only. Re-checked
+  in Task 10.5 (Windows, Playwright 1.65.0): both still crash with the scan
+  restored (3 of 3 runs each). On the leave confirmation the rule
+  `aria-dialog-name` alone crashes the page, and so do all the other rules
+  together, so no single rule is the cause; the exit confirmation, the same
+  component, does not crash in the same states. On the completed results a
+  fresh session scanned alone did not crash; the crash needs the full
+  journey (earlier scans, the download). Not yet tried on Linux (CI skips
+  both scans); re-check there and with newer Playwright releases.
 - **Playwright's WebKit** does not close a page through a
   beforeunload-running close even when nothing objects; the test checks that
   no prompt appears instead.
 
-**Manual checks before release (not automated).**
-- **Real tab switching:** in each browser, start a session, switch to
-  another tab during a stimulus and come back: the session is paused and
-  that trial is invalid (CSV `invalid_reason` `visibility_lost`).
-- **Screen reader:** NVDA with Firefox or Chrome, and VoiceOver with Safari:
-  the briefing, practice feedback, pause, break, results, dialogs, and
-  clearing are announced meaningfully.
-- **Zoom:** 200% and 400% browser zoom on the briefing and results.
+**Manual checks before release (not automated).** Steps, expected
+outcomes, and a record table are in
+[docs/MANUAL_VERIFICATION.md](docs/MANUAL_VERIFICATION.md) (prepared in
+Task 10.5; not yet performed):
+- **Real tab switching** in each browser during practice, a main trial, the
+  break, and a paused session. The CSV `invalid_reason` of a trial
+  interrupted this way may be `visibility_lost`, `interrupt`, or
+  `focus_lost`, depending on which browser event arrives first.
+- **Screen reader:** NVDA with Firefox or Chrome, and VoiceOver with Safari.
+- **Zoom:** 200% and 400% browser zoom.
+
+**Short landscape windows (open decision D4).** At 844×390 the stimulus is
+entirely below the visible area when the page is not scrolled: practice
+stimuli start at y = 390 (Stroop) and 399 (Flanker), main-trial stimuli at
+440 and 442, because the trial area keeps its fixed height below the header
+and session bar (identical in Chromium, Firefox, and WebKit). Only Flanker's
+width is guarded today. A height guard is a protocol decision awaiting the
+owner (Task 10.5 report).
 
 **Not covered yet.**
 - **Timing:** real timing (the clock is simulated).
