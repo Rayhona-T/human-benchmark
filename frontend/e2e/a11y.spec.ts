@@ -45,6 +45,10 @@ for (const driver of [STROOP, FLANKER] as ExperimentDriver[]) {
     await page.getByRole("button", { name: `Start ${driver.name}` }).click();
     await expectNoAxeViolations(page, "instructions and mapping check");
     for (const key of driver.keys) await page.keyboard.press(key);
+    // The state under test: every key recognized, so practice can begin.
+    await expect(
+      page.getByRole("button", { name: "Begin 12 practice trials" }),
+    ).toBeEnabled();
     await expectNoAxeViolations(page, "mapping check complete");
     await page
       .getByRole("button", { name: "Begin 12 practice trials" })

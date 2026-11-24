@@ -55,17 +55,25 @@ interface AxeWindow {
 
 async function analyze(page: Page, fakeClock: boolean): Promise<Violation[]> {
   // CSS transitions run in real time (not on the fake clock). Scanning one
-  // mid-way measures colors that never rest on screen, e.g. a button 60 ms
-  // into its 120 ms change from the disabled style. Wait until none runs.
+  // mid-way measures colors that never rest on screen: a button 120 ms into
+  // its change from the disabled style read 3.3:1 in WebKit (CI run 3) while
+  // its resting colors are 6.7:1. "Nothing running right now" is not enough,
+  // because the re-render that starts a transition can land just after a
+  // check, so no animation may run at either end of a 50 ms window.
+  const running = () =>
+    page.evaluate(
+      () =>
+        document.getAnimations().filter((a) => a.playState === "running")
+          .length,
+    );
   await expect
     .poll(
-      () =>
-        page.evaluate(
-          () =>
-            document.getAnimations().filter((a) => a.playState === "running")
-              .length,
-        ),
-      { message: "CSS transitions to finish before the axe scan" },
+      async () => {
+        const before = await running();
+        await page.waitForTimeout(50);
+        return before + (await running());
+      },
+      { message: "the page to settle (no CSS transition) before the axe scan" },
     )
     .toBe(0);
   if (!(await page.evaluate(() => "axe" in window))) {
